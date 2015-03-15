@@ -24,31 +24,49 @@ CVImage::CVImage(const CVImage &anotherImage)
         data[i] = anotherImage.data[i];
 }
 
+CVImage::CVImage(CVImage &&other)
+{
+    height = other.height;
+    width = other.width;
+    data = std::make_unique<double[]>(height*width);
+    for (int i = 0; i < height*width; ++i)
+        data[i] = other.data[i];
+
+
+
+    other.data = nullptr;
+    other.height = 0;
+    other.width = 0;
+}
+
+
 CVImage::~ CVImage()
 {
 
 }
 
- CVImage  CVImage::fromFile(const QString fileName)
+ CVImage  CVImage::fromFile(const QString &fileName)
 {
     QImage qImage;
     bool isSuccessfull = qImage.load(fileName);
     if(isSuccessfull)
     {
+
         return fromQImage(qImage);
     }
     else
     {
-        std:cerr << "can't load image from file";
+        std::cerr << "can't load image from file";
         return  CVImage(0,0);
     }
 }
 
- CVImage  CVImage::fromQImage(const QImage qImage)
+ CVImage  CVImage::fromQImage(const QImage &qImage)
 {
     int width = qImage.width();
     int height = qImage.height();
     CVImage image(height, width);
+
     for (int i = 0; i < height; ++i)
     {
         for (int j = 0; j < width; ++j)
@@ -62,7 +80,7 @@ CVImage::~ CVImage()
 
             image.setPixel(i, j, value);
         }
-    }
+    }    
     return image;
 }
 
@@ -70,6 +88,7 @@ CVImage::~ CVImage()
 QImage  CVImage::toQImage()
 {
     QImage result = QImage(width, height, QImage::Format_RGB32);
+
     for(int i=0; i<height; i++)
     {
         for(int j=0; j<width; j++)
@@ -77,7 +96,9 @@ QImage  CVImage::toQImage()
             int color = getPixel(i, j);
             result.setPixel(j, i, qRgb(color,color,color));
         }
+
     }
+
     return result;
 }
 
@@ -87,7 +108,7 @@ void CVImage::save(const QString fileName)
 }
 
 
-double  CVImage::getPixel(int i, int j)
+double  CVImage::getPixel(int i, int j) const
 {
         return data[i*width + j];
 
@@ -99,12 +120,12 @@ void  CVImage::setPixel(int i, int j, double value)
 
 }
 
-int CVImage::getHeight()
+int CVImage::getHeight() const
 {
     return height;
 }
 
-int CVImage::getWidth()
+int CVImage::getWidth() const
 {
     return width;
 }
@@ -112,37 +133,22 @@ int CVImage::getWidth()
 
 void CVImage::normalize(double newMin, double newMax)
 {
-    double oldMin = INT_MAX, oldMax = INT_MIN;
-    for(int i=0; i<height; i++)
-    {
-        for(int j=0; j<width; j++)
-        {
-            if(data[i*width+j] <oldMin)
-                oldMin = data[i*width+j];
-            else
-                if(data[i*width+j] > oldMax)
-                    oldMax = data[i*width+j];
-        }
-    }
+    auto minmax = minmax_element(&data[0], &data[height * width - 1]);
+    double oldMin = *minmax.first;
+    double oldMax = *minmax.second;
 
-    for(int i=0; i<height; i++)
-    {
-        for(int j=0; j<width; j++)
-        {
-           data[i*width+j] = newMin + (newMax - newMin)*(data[i*width+j] - oldMin)/(oldMax - oldMin);
-        }
-    }
+
+    for_each(&data[0], &data[height * width - 1], [&oldMin,&oldMax,&newMin,&newMax] (double &value) {
+        value = newMin + (newMax - newMin)*(value - oldMin)/(oldMax - oldMin);
+     });
+
 }
 
 
 void CVImage::normalize(double oldMin, double oldMax, double newMin, double newMax)
 {
-    for(int i=0; i<height; i++)
-    {
-        for(int j=0; j<width; j++)
-        {
-           data[i*width+j] = newMin + (newMax - newMin)*(data[i*width+j] - oldMin)/(oldMax - oldMin);
-        }
-    }
+    for_each(&data[0], &data[height * width - 1], [&oldMin,&oldMax,&newMin,&newMax] (double &value) {
+        value = newMin + (newMax - newMin)*(value - oldMin)/(oldMax - oldMin);
+     });
 }
 

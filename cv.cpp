@@ -1,11 +1,10 @@
-#pragma once
 #include"cv.h"
 
-void Convolute(CVImage source,CVImage &dest, CVKernel kernel, BorderWrappingType type)
+void Convolute(const CVImage &source, CVImage &dest, CVKernel kernel, BorderWrappingType type)
 {
 
     if(source.getHeight() != dest.getHeight() || source.getWidth() != dest.getWidth()){
-        std:cerr<<"Sizes don't match";
+        std::cerr<<"Sizes don't match";
         return;
     }
 
@@ -36,15 +35,14 @@ void Convolute(CVImage source,CVImage &dest, CVKernel kernel, BorderWrappingType
                                 adding =  0;
                                 break;
                             case BorderWrappingType::CopyBorder:
-                                adding = source.getPixel(min(max(testI,0), source.getHeight()-1), min(max(testJ,0), source.getWidth()-1));
+                                adding *= source.getPixel(min(max(testI,0), source.getHeight()-1), min(max(testJ,0), source.getWidth()-1));
                                 break;
                             case BorderWrappingType::ReflectBorder:
                                 if(testI < 0) testI = testI * (-1);
                                 if(testJ < 0) testJ = testJ * (-1);
                                 if(testI >= source.getHeight()) testI = 2 * (source.getHeight() - 1) - testI;
                                 if(testJ >= source.getWidth()) testJ = 2 * (source.getWidth() - 1) - testJ;
-                                std::cerr<< testI<<" "<<testJ<<endl;
-                                adding = source.getPixel(testI, testJ);
+                                adding *= source.getPixel(testI, testJ);
                                 break;
                             case BorderWrappingType::WrapupBorder:
 
@@ -58,7 +56,7 @@ void Convolute(CVImage source,CVImage &dest, CVKernel kernel, BorderWrappingType
                                 if (testJ  >= source.getWidth())
                                     testJ  = testJ  - source.getWidth();
 
-                                adding =  source.getPixel(testI, testJ);
+                                adding *=  source.getPixel(testI, testJ);
                         }
                     }
                     pixel +=adding;
@@ -69,10 +67,10 @@ void Convolute(CVImage source,CVImage &dest, CVKernel kernel, BorderWrappingType
     }
 }
 
-void CVSobelX(CVImage source, CVImage &dest, BorderWrappingType type, bool isNorm){
+void CVSobelX(const CVImage &source, CVImage &dest, BorderWrappingType type, bool isNorm){
 
     if(source.getHeight() != dest.getHeight() || source.getWidth() != dest.getWidth()){
-        std:cerr<<"Sizes don't match";
+        std::cerr<<"Sizes don't match";
         return;
     }
 
@@ -85,10 +83,10 @@ void CVSobelX(CVImage source, CVImage &dest, BorderWrappingType type, bool isNor
 }
 
 
-void CVSobelSeparateX(CVImage source, CVImage &dest, BorderWrappingType type, bool isNorm){
+void CVSobelSeparateX(const CVImage source, CVImage &dest, BorderWrappingType type, bool isNorm){
 
     if(source.getHeight() != dest.getHeight() || source.getWidth() != dest.getWidth()){
-        std:cerr<<"Sizes don't match";
+        std::cerr<<"Sizes don't match";
         return;
     }
 
@@ -106,10 +104,10 @@ void CVSobelSeparateX(CVImage source, CVImage &dest, BorderWrappingType type, bo
 }
 
 
-void CVSobelY(CVImage source, CVImage &dest, BorderWrappingType type, bool isNorm){
+void CVSobelY(const CVImage &source, CVImage &dest, BorderWrappingType type, bool isNorm){
 
     if(source.getHeight() != dest.getHeight() || source.getWidth() != dest.getWidth()){
-        std:cerr<<"Sizes don't match";
+        std::cerr<<"Sizes don't match";
         return;
     }
 
@@ -122,10 +120,10 @@ void CVSobelY(CVImage source, CVImage &dest, BorderWrappingType type, bool isNor
 }
 
 
-void CVSobelSeparateY(CVImage source, CVImage &dest, BorderWrappingType type, bool isNorm){
+void CVSobelSeparateY(const CVImage &source, CVImage &dest, BorderWrappingType type, bool isNorm){
 
     if(source.getHeight() != dest.getHeight() || source.getWidth() != dest.getWidth()){
-        std:cerr<<"Sizes don't match";
+        std::cerr<<"Sizes don't match";
         return;
     }
 
@@ -142,10 +140,10 @@ void CVSobelSeparateY(CVImage source, CVImage &dest, BorderWrappingType type, bo
     dest.normalize(0,255);
 }
 
-void CVSobel(CVImage source, CVImage &dest, BorderWrappingType type){
+void CVSobel(const CVImage &source, CVImage &dest, BorderWrappingType type){
 
     if(source.getHeight() != dest.getHeight() || source.getWidth() != dest.getWidth()){
-        std:cerr<<"Sizes don't match";
+        std::cerr<<"Sizes don't match";
         return;
     }
 

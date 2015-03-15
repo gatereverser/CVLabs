@@ -15,13 +15,13 @@ enum class BorderWrappingType{
 };
 
 
-void Convolute(CVImage source, CVImage &dest, CVKernel kernel, BorderWrappingType type = BorderWrappingType::ZeroBorder);
+void Convolute(const CVImage &source, CVImage &dest, CVKernel kernel, BorderWrappingType type = BorderWrappingType::ZeroBorder);
 
-void CVSobelX(CVImage source, CVImage &dest, BorderWrappingType type = BorderWrappingType::ZeroBorder, bool isNorm = false);
-void CVSobelSeparateX(CVImage source, CVImage &dest, BorderWrappingType type = BorderWrappingType::ZeroBorder, bool isNorm = false);
-void CVSobelY(CVImage source, CVImage &dest, BorderWrappingType type = BorderWrappingType::ZeroBorder, bool isNorm = false);
-void CVSobelSeparateY(CVImage source, CVImage &dest, BorderWrappingType type = BorderWrappingType::ZeroBorder, bool isNorm = false);
-void CVSobel(CVImage source, CVImage &dest, BorderWrappingType type = BorderWrappingType::ZeroBorder);
+void CVSobelX(const CVImage &source, CVImage &dest, BorderWrappingType type = BorderWrappingType::ZeroBorder, bool isNorm = false);
+void CVSobelSeparateX(const CVImage source, CVImage &dest, BorderWrappingType type = BorderWrappingType::ZeroBorder, bool isNorm = false);
+void CVSobelY(const CVImage &source, CVImage &dest, BorderWrappingType type = BorderWrappingType::ZeroBorder, bool isNorm = false);
+void CVSobelSeparateY(const CVImage &source, CVImage &dest, BorderWrappingType type = BorderWrappingType::ZeroBorder, bool isNorm = false);
+void CVSobel(const CVImage &source, CVImage &dest, BorderWrappingType type = BorderWrappingType::ZeroBorder);
 
 
 #endif // CV
