@@ -28,9 +28,10 @@ CVImage::CVImage(CVImage &&other)
 {
     height = other.height;
     width = other.width;
-    data = std::make_unique<double[]>(height*width);
-    for (int i = 0; i < height*width; ++i)
-        data[i] = other.data[i];
+    data = move(other.data);
+//    data = std::make_unique<double[]>(height*width);
+//    for (int i = 0; i < height*width; ++i)
+//        data[i] = other.data[i];
 
 
 
@@ -141,6 +142,25 @@ void CVImage::normalize(double newMin, double newMax)
     for_each(&data[0], &data[height * width - 1], [&oldMin,&oldMax,&newMin,&newMax] (double &value) {
         value = newMin + (newMax - newMin)*(value - oldMin)/(oldMax - oldMin);
      });
+
+}
+
+void CVImage::downscale(int size)
+{
+    unique_ptr<double[]> result = make_unique<double[]>(height/size * width/size);
+
+    for(int i=0; i< height; i+=size)
+    {
+        for(int j=0; j< width; j+=size)
+        {
+
+            result[i*width / (size*size) + j/size] = getPixel(i,j);
+        }
+
+    }
+    data = move(result);
+    height/=size;
+    width/=size;
 
 }
 

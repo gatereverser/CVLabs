@@ -1,6 +1,4 @@
-#ifndef CVKERNEL
-#define CVKERNEL
-
+#pragma once
 #include <iostream>
 #include <memory>
 
@@ -34,5 +32,4 @@ public:
 };
 
 
-#endif // CVKERNEL
 

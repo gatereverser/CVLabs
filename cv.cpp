@@ -166,3 +166,30 @@ void CVSobel(const CVImage &source, CVImage &dest, BorderWrappingType type){
     dest.normalize(0, 255);
 
 }
+
+
+void GaussSeparate(const CVImage &source, CVImage &dest, double sigma, BorderWrappingType type)
+{
+    int k = 3*sigma;
+    int size = 2*k+1;
+    unique_ptr<double[]> data = make_unique<double[]> (size);
+
+
+    for(int i=0; i<size; i++)
+    {
+        int x = i - k;
+        double value = exp(-(x*x)/(2*sigma*sigma))/(sqrt(2*3.14)*sigma);
+        data[i] = value;
+    }
+
+
+    CVKernel kernel1 (1,size,data.get());
+    CVKernel kernel2 (size,1,data.get());
+
+    CVImage temp(source.getHeight(), source.getWidth());
+    Convolute(source, temp, kernel1, type);
+    Convolute(temp, dest, kernel2, type);
+    dest.normalize(0,255);
+
+}
+

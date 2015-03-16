@@ -1,5 +1,4 @@
-#ifndef CVIMAGE
-#define CVIMAGE
+#pragma once
 
 #include <QImage>
 #include <iostream>
@@ -39,9 +38,10 @@ public:
      void save(const QString fileName);
      void normalize(double newMin, double newMax);
      void normalize(double oldMin, double oldMax, double newMin, double newMax);
+     void downscale(int size);
 
 };
 
 
-#endif // CVIMAGE
+
 
