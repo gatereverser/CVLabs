@@ -15,8 +15,7 @@ class Pyramid
 
 public:
     Pyramid(int octaves, int levels);
-    Pyramid(const  Pyramid &other);
-    Pyramid(Pyramid&& other);
+
 
     void save(const QString &fileName);
 

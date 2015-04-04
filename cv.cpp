@@ -1,6 +1,6 @@
 #include"cv.h"
 
-void Convolute(const CVImage &source, CVImage &dest, CVKernel kernel, BorderWrappingType type)
+void Convolute(const CVImage &source, CVImage &dest, CVKernel &kernel, BorderWrappingType type)
 {
 
     if(source.getHeight() != dest.getHeight() || source.getWidth() != dest.getWidth()){

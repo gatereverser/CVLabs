@@ -6,42 +6,6 @@ Pyramid::Pyramid(int octaves, int levels)
     levelsCount = levels;
 }
 
-Pyramid::Pyramid(const Pyramid &other)
-{
-    octaveCount = other.octaveCount;
-    levelsCount = other.levelsCount;
-
-
-    for (int i = 0; i < other.images.size(); i++){
-        images.push_back(other.images[i]);
-        currentSigma.push_back(other.currentSigma[i]);
-        realSigma.push_back(other.realSigma[i]);
-        currentOctave.push_back(other.currentOctave[i]);
-    }
-}
-
-Pyramid::Pyramid(Pyramid &&other)
-{
-    octaveCount = other.octaveCount;
-    levelsCount = other.levelsCount;
-
-    for (int i = 0; i < other.images.size(); i++){
-
-        images.push_back(other.images[i]);
-        currentSigma.push_back(other.currentSigma[i]);
-        realSigma.push_back(other.realSigma[i]);
-        currentOctave.push_back(other.currentOctave[i]);
-    }
-
-    other.images.clear();
-    other.realSigma.clear();
-    other.currentSigma.clear();
-    other.currentOctave.clear();
-
-    other.octaveCount = 0;
-    other.levelsCount =0;
-
-}
 
 
 void Pyramid::save(const QString &fileName)
@@ -65,7 +29,7 @@ Pyramid Pyramid::Build(const CVImage &image, int octaveNum, int levelNum, double
         GaussSeparate(image, initial,sqrt(sigma0Start*sigma0Start - sigmaImage*sigmaImage),BorderWrappingType::ReflectBorder);
 
 
-        double k = sigma0Start *pow(2, 1./levelNum);
+        double k = pow(2, 1./levelNum);// sigma0Start* - for future optimization
         for(int i=0; i<octaveNum; i++)
         {
             double octaveSigma = pow(2,i) * sigma0Start;
@@ -81,7 +45,8 @@ Pyramid Pyramid::Build(const CVImage &image, int octaveNum, int levelNum, double
 
                 cerr<<sigma0Start * pow(k,j)<<" "<<octaveSigma * pow(k,j)<<endl;
             }
-            initial.downscale(2);
+
+            initial = initial.downscale(2);
         }
 
         return result;
@@ -100,13 +65,13 @@ double Pyramid::findPixel(int x, int y, float sigma)
         return images[0].getPixel(x,y);
     }
 
-    int downscale;
+    double downscale;
 
     if(sigma >= realSigma.back())
     {
-        downscale = currentOctave.back() * 2;
+        downscale = pow(2,currentOctave.back());
         if(downscale == 0) downscale = 1;
-        images.back().getPixel(x / downscale, y / downscale);
+        return images.back().getPixel(x / downscale, y / downscale);
     }
 
     int position = 1;
@@ -116,14 +81,23 @@ double Pyramid::findPixel(int x, int y, float sigma)
 
     int requiredOctave = currentOctave[position];
 
-    downscale = requiredOctave * 2;
+
+    downscale = pow(2, requiredOctave);
     if(downscale == 0) downscale = 1;
 
+    int previousRequiredOctave = 0 ; //for the between octaves case
+    double prevDownscale = 0;
+    if(position - 1 != -1 ){
+        previousRequiredOctave = currentOctave[position - 1];
+        prevDownscale = pow(2, previousRequiredOctave);;
+    }
+
+    //DANGEROUS PLACE
     double fromSigma = realSigma[position - 1];
     double toSigma = realSigma[position];
     double fromPixel =  (position%levelsCount == 0) ? // if sigma is between octaves
-                images[position].getPixel(x  * 2 / downscale, y * 2 / downscale) :
-                images[position].getPixel(x / downscale, y / downscale);
+                images[position].getPixel(x  / prevDownscale, y  / prevDownscale) :
+                images[position - 1].getPixel(x / downscale, y / downscale);
     double toPixel = images[position].getPixel(x / downscale, y / downscale);
 
     return fromPixel + (toPixel - fromPixel)*(sigma - fromSigma) / (toSigma - fromSigma);

@@ -22,6 +22,10 @@ public:
     CVImage(CVImage&& other);
     ~CVImage();
 
+    //DOn't forget to make operator = for copying
+    CVImage& operator=(CVImage&& other);
+
+
     static CVImage fromFile(const QString &fileName);
     static CVImage fromQImage(const QImage &qImage);
 
@@ -29,16 +33,29 @@ public:
     QImage toQImage();
 
 
-     double getPixel(int i, int j) const;
-     void setPixel(int i, int j, double value);
+     inline double getPixel(int i, int j) const{
+         return data[i*width + j];
 
-     int getHeight() const;
-     int getWidth() const;
+    }
+
+     inline void setPixel(int i, int j, double value){
+         data[i*width + j] = value;
+
+     }
+
+     inline int getHeight() const {
+         return height;
+     }
+
+     inline int getWidth() const{
+         return width;
+     }
 
      void save(const QString fileName);
      void normalize(double newMin, double newMax);
      void normalize(double oldMin, double oldMax, double newMin, double newMax);
-     void downscale(int size);
+
+     CVImage downscale(int size);
 
 };
 

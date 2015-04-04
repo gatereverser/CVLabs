@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 
     ////LAB 2
 
-Pyramid pyr(Pyramid::Build(image,3,2,1));
+Pyramid pyr(Pyramid::Build(image,3,3,1.6));
 pyr.save("sem");
 cerr<<pyr.findPixel(125,150,0.6)<<endl;
 

@@ -15,7 +15,7 @@ enum class BorderWrappingType{
 };
 
 
-void Convolute(const CVImage &source, CVImage &dest, CVKernel kernel, BorderWrappingType type = BorderWrappingType::ZeroBorder);
+void Convolute(const CVImage &source, CVImage &dest, CVKernel &kernel, BorderWrappingType type = BorderWrappingType::ZeroBorder);
 
 void CVSobelX(const CVImage &source, CVImage &dest, BorderWrappingType type = BorderWrappingType::ZeroBorder, bool isNorm = false);
 void CVSobelSeparateX(const CVImage source, CVImage &dest, BorderWrappingType type = BorderWrappingType::ZeroBorder, bool isNorm = false);

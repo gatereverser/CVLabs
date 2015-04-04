@@ -40,6 +40,22 @@ CVImage::CVImage(CVImage &&other)
     other.width = 0;
 }
 
+CVImage& CVImage::operator=(CVImage&& other) // move assignment
+{
+    if (this == &other) {
+        return *this;
+    }
+
+    height = other.height;
+    width = other.width;
+    data = move(other.data);
+    other.data = nullptr;
+    other.height = 0;
+    other.width = 0;
+    return *this;
+}
+
+
 
 CVImage::~ CVImage()
 {
@@ -108,44 +124,20 @@ void CVImage::save(const QString fileName)
     toQImage().save(fileName);
 }
 
-
-double  CVImage::getPixel(int i, int j) const
-{
-        return data[i*width + j];
-
-}
-
-void  CVImage::setPixel(int i, int j, double value)
-{
-        data[i*width + j] = value;
-
-}
-
-int CVImage::getHeight() const
-{
-    return height;
-}
-
-int CVImage::getWidth() const
-{
-    return width;
-}
-
-
 void CVImage::normalize(double newMin, double newMax)
 {
-    auto minmax = minmax_element(&data[0], &data[height * width - 1]);
+    auto minmax = minmax_element(&data[0], &data[height * width]);
     double oldMin = *minmax.first;
     double oldMax = *minmax.second;
 
 
-    for_each(&data[0], &data[height * width - 1], [&oldMin,&oldMax,&newMin,&newMax] (double &value) {
+    for_each(&data[0], &data[height * width - 1], [&] (double &value) {
         value = newMin + (newMax - newMin)*(value - oldMin)/(oldMax - oldMin);
      });
 
 }
 
-void CVImage::downscale(int size)
+CVImage CVImage::downscale(int size)
 {
     unique_ptr<double[]> result = make_unique<double[]>(height/size * width/size);
 
@@ -158,10 +150,10 @@ void CVImage::downscale(int size)
         }
 
     }
-    data = move(result);
-    height/=size;
-    width/=size;
 
+    CVImage resultImage(height/size, width/size);
+    resultImage.data = move(result);
+    return resultImage;
 }
 
 
