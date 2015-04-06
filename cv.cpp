@@ -23,42 +23,7 @@ void Convolute(const CVImage &source, CVImage &dest, CVKernel &kernel, BorderWra
                     double adding =kernel.getValue(u,v);
                     int testI = i-(u-kernel.getCenterY());
                     int testJ = j-(v-kernel.getCenterX());
-
-                    if(testI < dest.getHeight() && testJ < dest.getWidth() && testI >= 0 && testJ >= 0){
-                        adding *= source.getPixel(testI, testJ);
-
-                    }
-                    else{
-                        switch(type)
-                        {
-                            case BorderWrappingType::ZeroBorder:
-                                adding =  0;
-                                break;
-                            case BorderWrappingType::CopyBorder:
-                                adding *= source.getPixel(min(max(testI,0), source.getHeight()-1), min(max(testJ,0), source.getWidth()-1));
-                                break;
-                            case BorderWrappingType::ReflectBorder:
-                                if(testI < 0) testI = testI * (-1);
-                                if(testJ < 0) testJ = testJ * (-1);
-                                if(testI >= source.getHeight()) testI = 2 * (source.getHeight() - 1) - testI;
-                                if(testJ >= source.getWidth()) testJ = 2 * (source.getWidth() - 1) - testJ;
-                                adding *= source.getPixel(testI, testJ);
-                                break;
-                            case BorderWrappingType::WrapupBorder:
-
-                                if (testI < 0)
-                                    testI = source.getHeight() + testI;
-                                if (testI >= source.getHeight())
-                                    testI = testI - source.getHeight();
-
-                                if (testJ < 0)
-                                    testJ  = source.getWidth() + testJ ;
-                                if (testJ  >= source.getWidth())
-                                    testJ  = testJ  - source.getWidth();
-
-                                adding *=  source.getPixel(testI, testJ);
-                        }
-                    }
+                    adding *= source.getPixel(testI, testJ);
                     pixel +=adding;
                 }
             }

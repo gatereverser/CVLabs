@@ -124,6 +124,15 @@ void CVImage::save(const QString fileName)
     toQImage().save(fileName);
 }
 
+
+
+
+
+
+
+
+
+
 void CVImage::normalize(double newMin, double newMax)
 {
     auto minmax = minmax_element(&data[0], &data[height * width]);
@@ -131,7 +140,7 @@ void CVImage::normalize(double newMin, double newMax)
     double oldMax = *minmax.second;
 
 
-    for_each(&data[0], &data[height * width - 1], [&] (double &value) {
+    for_each(&data[0], &data[height * width], [&] (double &value) {
         value = newMin + (newMax - newMin)*(value - oldMin)/(oldMax - oldMin);
      });
 

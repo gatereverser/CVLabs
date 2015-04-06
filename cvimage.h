@@ -9,6 +9,13 @@
 
 using namespace std;
 
+enum class BorderWrappingType{
+    ZeroBorder,
+    CopyBorder,
+    ReflectBorder,
+    WrapupBorder
+};
+
 
 class CVImage{
 private:
@@ -25,6 +32,7 @@ public:
     //DOn't forget to make operator = for copying
     CVImage& operator=(CVImage&& other);
 
+  // CVImage& operator=(CVImage& other) = default;
 
     static CVImage fromFile(const QString &fileName);
     static CVImage fromQImage(const QImage &qImage);
@@ -33,8 +41,43 @@ public:
     QImage toQImage();
 
 
-     inline double getPixel(int i, int j) const{
-         return data[i*width + j];
+    inline double getPixel(int testI, int testJ, BorderWrappingType type = BorderWrappingType::ZeroBorder) const{
+
+        if(testI < height && testJ < width && testI >= 0 && testJ >= 0){
+            return data[testI*width + testJ];
+
+        }
+        else{
+            switch(type)
+            {
+                case BorderWrappingType::ZeroBorder:
+                    return 0;
+                    break;
+                case BorderWrappingType::CopyBorder:
+                    return data[min(max(testI,0), height -1) * width + min(max(testJ,0), width-1)];
+                    break;
+                case BorderWrappingType::ReflectBorder:
+                    if(testI < 0) testI = testI * (-1);
+                    if(testJ < 0) testJ = testJ * (-1);
+                    if(testI >= height) testI = 2 * (height - 1) - testI;
+                    if(testJ >= width) testJ = 2 * (width - 1) - testJ;
+                    return data[testI*width + testJ];
+                    break;
+                case BorderWrappingType::WrapupBorder:
+
+                    if (testI < 0)
+                        testI = height + testI;
+                    if (testI >= height)
+                        testI = testI - height;
+
+                    if (testJ < 0)
+                        testJ  = width + testJ ;
+                    if (testJ  >= width)
+                        testJ  = testJ  - width;
+
+                    return data[testI*width + testJ];
+            }
+        }
 
     }
 
