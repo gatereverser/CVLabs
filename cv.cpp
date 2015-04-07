@@ -183,7 +183,7 @@ vector<FeaturePoint> findLocalMaximum(const CVImage& nonFilteredPoints, int thre
             }
 
             if (isLocalMaximum){
-                points.push_back(FeaturePoint(i, j, value));               
+                points.push_back(FeaturePoint(i, j, value));
             }
 
         }
@@ -219,27 +219,16 @@ vector<FeaturePoint> moravec(const CVImage &source, int windowHalfSize, int thre
     }
 
     vector<FeaturePoint> moravecPoints  =  findLocalMaximum(nonFilteredPoints, threshold);
-  //  return moravecPoints;
-    return nonMaximumSuppression(moravecPoints);
+    return moravecPoints;
+
+    double maxDistance = source.getHeight() * source.getHeight() + source.getWidth()*source.getWidth();
+    return nonMaximumSuppression(moravecPoints, maxDistance);
 }
 
 
-vector<FeaturePoint> nonMaximumSuppression(const vector<FeaturePoint> &nonSuppressedPoints,  int count, int stepCount, double weightFactor)
+vector<FeaturePoint> nonMaximumSuppression(const vector<FeaturePoint> &nonSuppressedPoints, double maxDistance,  int count, int stepCount, double weightFactor)
 {
     vector<FeaturePoint> points(nonSuppressedPoints);
-
-
-    double maxDistance = 0;
-
-    for (int i = 0; i < points.size(); i++){
-
-        for (int j = 0; j < points.size(); j++){
-           double currentDistance = points[i].getDistance(points[j]);
-
-            maxDistance = std::max(maxDistance, currentDistance);
-        }
-
-    }
 
     double step = maxDistance / stepCount;
     double radius = step;
@@ -275,8 +264,16 @@ vector<FeaturePoint> nonMaximumSuppression(const vector<FeaturePoint> &nonSuppre
 //COMMON HELPERS
 void drawPoints(QImage &image, const vector<FeaturePoint> points){
 
+    const int di[] = {0, 0, 1, -1};
+    const int dj[] = {-1, 1, 0, 0};
+
     for (FeaturePoint point : points) {
 
         image.setPixel(point.getY(), point.getX(), point.getWei() << 16);
+        for(int i = 0;i < 4;i++){
+            if(point.getX() + di[i] >= 0 && point.getY() + dj[i] >= 0 && point.getY() + dj[i] < image.width() && point.getX() + di[i] < image.height() ){
+                 image.setPixel(point.getY() + dj[i], point.getX() + di[i], point.getWei() << 16);
+            }
+        }
     }
 }

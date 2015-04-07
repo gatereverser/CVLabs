@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
 
 
 
-    CVImage image(CVImage::fromFile("1.jpg"));
+    CVImage image(CVImage::fromFile("5.tif"));
     image.save("source.png");
     //image.downscale(2);
     //image.save("resized.png");
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 
 //    /// END OF LAB2
 
-//    //// LAB 1
+// //// LAB 1
 
 //    CVImage s(image.getHeight(),image.getWidth());
 
@@ -78,8 +78,7 @@ int main(int argc, char *argv[])
 
 //    CVSobel(image, s);
 //    s.save("sobel.png");
-
-//    ////END OF LAB 1
+// ////END OF LAB 1
 
 
 

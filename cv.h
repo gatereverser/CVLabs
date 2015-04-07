@@ -23,7 +23,7 @@ void GaussSeparate(const CVImage &source, CVImage &dest, double sigma, BorderWra
 
 vector<FeaturePoint> findLocalMaximum(const CVImage& nonFilteredPoints, int threshold, int surroundingsHalfSize = 5);
 vector<FeaturePoint> moravec(const CVImage &source, int windowHalfSize, int threshold, BorderWrappingType type = BorderWrappingType::ZeroBorder);
-vector<FeaturePoint> nonMaximumSuppression(const vector<FeaturePoint> &nonSuppressedPoints,  int count = 500, int stepCount = 5000, double weightFactor = 0.9);
+vector<FeaturePoint> nonMaximumSuppression(const vector<FeaturePoint> &nonSuppressedPoints, double maxDistance,  int count = 500, int stepCount = 5000, double weightFactor = 0.9);
 
 
 void drawPoints(QImage &image, const vector<FeaturePoint> points);

@@ -58,23 +58,23 @@ public:
                     return data[min(max(testI,0), height -1) * width + min(max(testJ,0), width-1)];
                     break;
                 case BorderWrappingType::ReflectBorder:
-                    if(testI < 0) testI = testI * (-1);
-                    if(testJ < 0) testJ = testJ * (-1);
-                    if(testI >= height) testI = 2 * (height - 1) - testI;
-                    if(testJ >= width) testJ = 2 * (width - 1) - testJ;
+                    if(testI < 0) testI = testI * (-1) % height;
+                    if(testJ < 0) testJ = testJ * (-1) % width;
+                    if(testI >= height) testI =  testI % height;
+                    if(testJ >= width) testJ = testJ % width;
                     return data[testI*width + testJ];
                     break;
                 case BorderWrappingType::WrapupBorder:
 
                     if (testI < 0)
-                        testI = height + testI;
+                        testI = height + testI % height;
                     if (testI >= height)
-                        testI = testI - height;
+                        testI = testI % height;
 
                     if (testJ < 0)
-                        testJ  = width + testJ ;
+                        testJ  = width + testJ % width;
                     if (testJ  >= width)
-                        testJ  = testJ  - width;
+                        testJ  = testJ  % width;
 
                     return data[testI*width + testJ];
             }
