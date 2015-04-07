@@ -20,7 +20,7 @@ void Convolute(const CVImage &source, CVImage &dest, CVKernel &kernel, BorderWra
             {
                 for(int v = 0; v< kernel.getColumnCount(); v++)
                 {
-                    double adding =kernel.getValue(u,v);
+                    double adding = kernel.getValue(u,v);
                     int testI = i-(u-kernel.getCenterY());
                     int testJ = j-(v-kernel.getCenterX());
                     adding *= source.getPixel(testI, testJ);
@@ -158,3 +158,125 @@ void GaussSeparate(const CVImage &source, CVImage &dest, double sigma, BorderWra
 
 }
 
+
+//LAB3 utils
+vector<FeaturePoint> findLocalMaximum(const CVImage& nonFilteredPoints, int threshold, int surroundingsHalfSize){
+    vector<FeaturePoint> points;
+
+    int n = nonFilteredPoints.getHeight();
+    int m = nonFilteredPoints.getWidth();
+
+    for (int i = 0; i < n; i++){
+        for (int j = 0; j < m; j++) {
+            const double value = nonFilteredPoints.getPixel(i, j);
+            bool isLocalMaximum = value > threshold;
+            for (int di = -surroundingsHalfSize; isLocalMaximum && di <= surroundingsHalfSize; di++){
+                for (int dj = -surroundingsHalfSize; isLocalMaximum && dj <= surroundingsHalfSize ; dj++) {
+                   // if(di==0 && dj==0) continue;
+                    const int shiftedI = i + di;
+                    const int shiftedJ = j + dj;
+                     //IMPORTANT:  value >= or > ??
+                    if (shiftedI >= 0 && shiftedJ >= 0 && shiftedI < n && shiftedJ < m)
+                        isLocalMaximum = value >= nonFilteredPoints.getPixel(shiftedI, shiftedJ);
+
+                }
+            }
+
+            if (isLocalMaximum){
+                points.push_back(FeaturePoint(i, j, value));               
+            }
+
+        }
+    }
+
+    return points;
+
+}
+
+vector<FeaturePoint> moravec(const CVImage &source, int windowHalfSize, int threshold, BorderWrappingType type){
+
+    int n = source.getHeight();
+    int m = source.getWidth();
+
+    CVImage nonFilteredPoints(n, m);
+
+    for (int i = 0; i < n; i++){
+        for (int j = 0; j < m; j++) {
+            double minValue = INFINITY;
+            for (int k = 0; k < 8; k++) {
+                double currentValue = 0;
+                for (int u = -windowHalfSize; u <= windowHalfSize; u++){
+                    for (int v = -windowHalfSize; v <= windowHalfSize; v++){
+                        double differnece = source.getPixel(i + u, j + v, type)
+                                - source.getPixel(i + u + dx[k], j + v + dy[k], type);
+                        currentValue += pow(differnece, 2);
+                    }
+                }
+                minValue = std::min(minValue, currentValue);
+            }
+            nonFilteredPoints.setPixel(i, j, minValue);
+        }
+    }
+
+    vector<FeaturePoint> moravecPoints  =  findLocalMaximum(nonFilteredPoints, threshold);
+  //  return moravecPoints;
+    return nonMaximumSuppression(moravecPoints);
+}
+
+
+vector<FeaturePoint> nonMaximumSuppression(const vector<FeaturePoint> &nonSuppressedPoints,  int count, int stepCount, double weightFactor)
+{
+    vector<FeaturePoint> points(nonSuppressedPoints);
+
+
+    double maxDistance = 0;
+
+    for (int i = 0; i < points.size(); i++){
+
+        for (int j = 0; j < points.size(); j++){
+           double currentDistance = points[i].getDistance(points[j]);
+
+            maxDistance = std::max(maxDistance, currentDistance);
+        }
+
+    }
+
+    double step = maxDistance / stepCount;
+    double radius = step;
+    while (points.size() > count && radius <= maxDistance) {
+        cout<<radius<<endl;
+        for (int i = 0; i < points.size() && points.size() > count; i++) {
+            bool strongest = true;
+
+            for (int j = 0; j < points.size() && strongest; j++){
+                if (i != j){
+                    if (points[i].getDistance(points[j]) <= radius){
+                        if (points[i].getWei() * weightFactor  < points[j].getWei()){
+                            strongest = false;
+                        }
+                    }
+                }
+            }
+
+            if (!strongest) {
+                points.erase(points.begin() + i);
+                i--;
+            }
+        }
+        radius += step;
+    }
+
+
+    return points;
+}
+
+
+
+//COMMON HELPERS
+void drawPoints(QImage &image, const vector<FeaturePoint> points){
+
+    for (FeaturePoint point : points) {
+
+        image.setPixel(point.getY(), point.getX(), point.getWei() << 16);
+    }
+}

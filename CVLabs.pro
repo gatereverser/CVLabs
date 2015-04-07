@@ -18,12 +18,14 @@ SOURCES += main.cpp\
     cvimage.cpp \
     cv.cpp \
     cvkernel.cpp \
-    pyramid.cpp
+    pyramid.cpp \
+    featurepoint.cpp
 
 HEADERS  += mainwindow.h \
     cvimage.h \
     cv.h \
     cvkernel.h \
-    pyramid.h
+    pyramid.h \
+    featurepoint.h
 
 FORMS    += mainwindow.ui
