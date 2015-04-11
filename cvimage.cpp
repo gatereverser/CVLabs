@@ -150,9 +150,10 @@ CVImage CVImage::downscale(int size)
 {
     unique_ptr<double[]> result = make_unique<double[]>(height/size * width/size);
 
-    for(int i=0; i< height; i+=size)
+    for(int i=0; i< height - 1; i+=size)
     {
-        for(int j=0; j< width; j+=size)
+        // cout<<i<<endl;
+        for(int j=0; j< width - 1; j+=size)
         {
 
             result[i*width / (size*size) + j/size] = getPixel(i,j);

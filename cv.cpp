@@ -144,7 +144,7 @@ void GaussSeparate(const CVImage &source, CVImage &dest, double sigma, BorderWra
     {
         int x = i - k;
         double value = exp(-(x*x)/(2*sigma*sigma))/(sqrt(2*3.14)*sigma);
-        data[i] = value;
+        data[i] = value;        
     }
 
 
@@ -160,7 +160,7 @@ void GaussSeparate(const CVImage &source, CVImage &dest, double sigma, BorderWra
 
 
 //LAB3 utils
-vector<FeaturePoint> findLocalMaximum(const CVImage& nonFilteredPoints, int threshold, int surroundingsHalfSize){
+vector<FeaturePoint> findLocalMaximum(const CVImage& nonFilteredPoints, double threshold, int surroundingsHalfSize){
     vector<FeaturePoint> points;
 
     int n = nonFilteredPoints.getHeight();
@@ -193,7 +193,7 @@ vector<FeaturePoint> findLocalMaximum(const CVImage& nonFilteredPoints, int thre
 
 }
 
-vector<FeaturePoint> moravec(const CVImage &source, int windowHalfSize, int threshold, BorderWrappingType type){
+vector<FeaturePoint> moravec(const CVImage &source, int windowHalfSize, double threshold, BorderWrappingType type){
 
     int n = source.getHeight();
     int m = source.getWidth();
@@ -221,9 +221,77 @@ vector<FeaturePoint> moravec(const CVImage &source, int windowHalfSize, int thre
     vector<FeaturePoint> moravecPoints  =  findLocalMaximum(nonFilteredPoints, threshold);
     return moravecPoints;
 
-    double maxDistance = source.getHeight() * source.getHeight() + source.getWidth()*source.getWidth();
-    return nonMaximumSuppression(moravecPoints, maxDistance);
+   // double maxDistance = n * n + m * m;
+  //  return nonMaximumSuppression(moravecPoints, maxDistance);
 }
+
+
+vector<FeaturePoint> harris(const CVImage &source, int windowHalfSize, double threshold, double k, BorderWrappingType type){
+
+    int n = source.getHeight();
+    int m = source.getWidth();
+
+    CVImage nonFilteredPoints(n, m);
+    CVImage Ix(n, m);
+    CVImage Iy(n, m);
+    CVImage Ix2(n, m);
+    CVImage Iy2(n, m);
+    CVImage Ixy(n, m);
+
+    CVSobelSeparateX(source, Ix);
+    CVSobelSeparateY(source, Iy);
+    for (int i = 0; i < n; i++){
+        for (int j = 0; j < m; j++) {
+            double xValue = Ix.getPixel(i, j);
+            double yValue = Iy.getPixel(i, j);
+            Ix2.setPixel(i, j, xValue * xValue);
+            Iy2.setPixel(i, j, yValue * yValue);
+            Ixy.setPixel(i, j, xValue * yValue);
+        }
+    }
+
+    double sigma = (double) windowHalfSize / 3;
+   // cout<< sigma<<endl;
+
+    for (int i = 0; i < n; i++){
+        for (int j = 0; j < m; j++) {
+            double a = 0, b = 0, c = 0;
+            double weightedSum = 0;
+            for (int u = -windowHalfSize; u <= windowHalfSize; u++){
+                for (int v = -windowHalfSize; v <= windowHalfSize; v++){
+
+                    int x = u ;
+                    int y = v ;
+                    double value = exp(-(x * x + y * y)/(2 * sigma * sigma))/(2 * 3.14 * sigma * sigma);
+                    //cout<< value<<endl;
+
+                    a += value * Ix2.getPixel(i + u, j + v);
+                    b += value * Ixy.getPixel(i + u, j + v);
+                    c += value * Iy2.getPixel(i + u, j + v);
+                }
+            }
+            //STANDARD SUM
+           // weightedSum = a * c - b * b - k* (a + b) * (a + b);
+
+            //min lambda sum
+
+            double d = sqrt((a - c) * (a - c) + 4 * b * b);
+            double lambda1 = (a + c - d) / 2;
+            double lambda2 = (a + c + d) / 2;
+            double lambdaMin = std::min(fabs(lambda1), fabs(lambda2));
+
+           //cout<<a<< " "<< b<< " "<< c << " "<<weightedSum<<endl;
+            nonFilteredPoints.setPixel(i, j, lambdaMin);
+        }
+    }
+
+    vector<FeaturePoint> harrisPoints  =  findLocalMaximum(nonFilteredPoints, threshold);
+   // return harrisPoints;
+
+    double maxDistance = n * n + m * m;
+    return nonMaximumSuppression(harrisPoints, maxDistance);
+}
+
 
 
 vector<FeaturePoint> nonMaximumSuppression(const vector<FeaturePoint> &nonSuppressedPoints, double maxDistance,  int count, int stepCount, double weightFactor)
@@ -233,7 +301,7 @@ vector<FeaturePoint> nonMaximumSuppression(const vector<FeaturePoint> &nonSuppre
     double step = maxDistance / stepCount;
     double radius = step;
     while (points.size() > count && radius <= maxDistance) {
-        cout<<radius<<endl;
+        // cout<<radius<<endl;
         for (int i = 0; i < points.size() && points.size() > count; i++) {
             bool strongest = true;
 
@@ -272,7 +340,7 @@ void drawPoints(QImage &image, const vector<FeaturePoint> points){
         image.setPixel(point.getY(), point.getX(), point.getWei() << 16);
         for(int i = 0;i < 4;i++){
             if(point.getX() + di[i] >= 0 && point.getY() + dj[i] >= 0 && point.getY() + dj[i] < image.width() && point.getX() + di[i] < image.height() ){
-                 image.setPixel(point.getY() + dj[i], point.getX() + di[i], point.getWei() << 16);
+                 image.setPixel(point.getY() + dj[i], point.getX() + di[i], /*point.getWei()*/ 255 << 16);
             }
         }
     }

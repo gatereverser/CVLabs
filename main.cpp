@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
 
 
 
-    CVImage image(CVImage::fromFile("5.tif"));
+    CVImage image(CVImage::fromFile("3.jpg"));
     image.save("source.png");
     //image.downscale(2);
     //image.save("resized.png");
@@ -33,10 +33,18 @@ int main(int argc, char *argv[])
 
     ////LAB 3
 
-    vector<FeaturePoint> points = moravec(image, 1, 3);
-    QImage moravec(image.toQImage());
-    drawPoints(moravec, points);
-    moravec.save("moravec.png");
+//    vector<FeaturePoint> points = moravec(image, 2, 3);
+//    QImage moravec(image.toQImage());
+//    drawPoints(moravec, points);
+//    moravec.save("moravec.png");
+
+
+    CVImage u(image.getHeight(),image.getWidth());
+    GaussSeparate(image, u, 0.3);
+    vector<FeaturePoint> points2 = harris(u, 3, 0.001);// Maybe 0.001?
+    QImage har(image.toQImage());
+    drawPoints(har, points2);
+    har.save("harris.png");
 
 
     /// END OF LAB3
