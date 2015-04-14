@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
 
 
 
-    CVImage image(CVImage::fromFile("3.jpg"));
+    CVImage image(CVImage::fromFile("image.png"));
     image.save("source.png");
     //image.downscale(2);
     //image.save("resized.png");
@@ -42,6 +42,7 @@ int main(int argc, char *argv[])
     CVImage u(image.getHeight(),image.getWidth());
     GaussSeparate(image, u, 0.3);
     vector<FeaturePoint> points2 = harris(u, 3, 0.001);// Maybe 0.001?
+    getSimpleDescriptors(image, points2);
     QImage har(image.toQImage());
     drawPoints(har, points2);
     har.save("harris.png");
@@ -54,7 +55,7 @@ int main(int argc, char *argv[])
 
 //    ////LAB 2
 
-//Pyramid pyr(Pyramid::Build(image,3,3,1.6));
+//Pyramid pyr(Pyramid::Build(image,3,6,1.6));
 //pyr.save("sem");
 //cerr<<pyr.findPixel(125,150,0.6)<<endl;
 

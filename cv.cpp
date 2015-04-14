@@ -124,12 +124,11 @@ void CVSobel(const CVImage &source, CVImage &dest, BorderWrappingType type){
         {
             double x = gradX.getPixel(i,j);
             double y = gradY.getPixel(i,j);
-            dest.setPixel(i,j, qRound(sqrt(x*x + y*y)));
+            dest.setPixel(i,j, qRound(sqrt(x*x + y*y)));            
         }
     }
 
     dest.normalize(0, 255);
-
 }
 
 
@@ -219,10 +218,10 @@ vector<FeaturePoint> moravec(const CVImage &source, int windowHalfSize, double t
     }
 
     vector<FeaturePoint> moravecPoints  =  findLocalMaximum(nonFilteredPoints, threshold);
-    return moravecPoints;
+    // return moravecPoints;
 
-   // double maxDistance = n * n + m * m;
-  //  return nonMaximumSuppression(moravecPoints, maxDistance);
+    double maxDistance = n * n + m * m;
+    return nonMaximumSuppression(moravecPoints, maxDistance);
 }
 
 
@@ -251,7 +250,6 @@ vector<FeaturePoint> harris(const CVImage &source, int windowHalfSize, double th
     }
 
     double sigma = (double) windowHalfSize / 3;
-   // cout<< sigma<<endl;
 
     for (int i = 0; i < n; i++){
         for (int j = 0; j < m; j++) {
@@ -262,31 +260,34 @@ vector<FeaturePoint> harris(const CVImage &source, int windowHalfSize, double th
 
                     int x = u ;
                     int y = v ;
-                    double value = exp(-(x * x + y * y)/(2 * sigma * sigma))/(2 * 3.14 * sigma * sigma);
-                    //cout<< value<<endl;
+                    double value = exp(-(x * x + y * y) / (2 * sigma * sigma)) / (2 * 3.14 * sigma * sigma);
+
 
                     a += value * Ix2.getPixel(i + u, j + v);
                     b += value * Ixy.getPixel(i + u, j + v);
                     c += value * Iy2.getPixel(i + u, j + v);
                 }
             }
+            //if (i == 500)cout<< a<<" " <<Ix3.getPixel(i,j)<<endl;
+
             //STANDARD SUM
-           // weightedSum = a * c - b * b - k* (a + b) * (a + b);
+           // weightedSum = a * c - b * b - k * (a + b) * (a + b);
 
-            //min lambda sum
-
+            //MIN LAMBDA SUM
             double d = sqrt((a - c) * (a - c) + 4 * b * b);
+
             double lambda1 = (a + c - d) / 2;
             double lambda2 = (a + c + d) / 2;
+
             double lambdaMin = std::min(fabs(lambda1), fabs(lambda2));
 
-           //cout<<a<< " "<< b<< " "<< c << " "<<weightedSum<<endl;
+           //cout<<a<< " "<< b<< " "<< c << " "<<lambdaMin<<endl;
             nonFilteredPoints.setPixel(i, j, lambdaMin);
         }
     }
 
     vector<FeaturePoint> harrisPoints  =  findLocalMaximum(nonFilteredPoints, threshold);
-   // return harrisPoints;
+    return harrisPoints;
 
     double maxDistance = n * n + m * m;
     return nonMaximumSuppression(harrisPoints, maxDistance);
@@ -327,6 +328,53 @@ vector<FeaturePoint> nonMaximumSuppression(const vector<FeaturePoint> &nonSuppre
     return points;
 }
 
+
+//LAB4
+CVImage  getSimpleDescriptors(const CVImage &source, vector<FeaturePoint> points, int binCount, int histCount, int cellCount ){
+
+    int n = source.getHeight();
+    int m = source.getWidth();
+    int size = histCount / 2;
+
+    CVImage Ix(n, m);
+    CVImage Iy(n, m);
+    CVSobelSeparateX(source, Ix);
+    CVSobelSeparateY(source, Iy);
+
+    CVImage detectors(points.size(), histCount * histCount * binCount);
+    int cellInHistCount = cellCount / histCount;
+
+    for(int k = 0; k < points.size();k++){
+        for(int i = -size;i < size; i++){
+            for(int j = -size;j < size; j++){
+                for(int u = 0; u < cellInHistCount; u++){
+                    for(int v = 0; v < cellInHistCount; v++){
+                        double valueX = Ix.getPixel( points[k].getX() + i * cellInHistCount + u,
+                                         points[k].getY() + j * cellInHistCount + v);
+                        double valueY = Iy.getPixel( points[k].getX() + i * cellInHistCount + u,
+                                         points[k].getY() + j * cellInHistCount + v);
+                        double angle = atan2(valueY,valueX) * 180 /3.14;
+                        double magnitude = sqrt(valueX * valueX + valueY * valueY);
+                        double binNum  = angle / binCount;
+                        int divedBinNum = (int) binNum;
+
+                        int row = (i + size) * histCount * binCount;
+                        int column = (j + size) * binCount;
+
+                        detectors.setPixel(k,  row + column + divedBinNum % 8, magnitude);
+
+                        if(fabs(binNum - divedBinNum) > 0.00001){
+                            detectors.setPixel(k,  row + column + (divedBinNum + 1) % 8, magnitude);
+                        }
+
+                    }
+                }
+            }
+        }
+    }
+
+    return detectors;
+}
 
 
 //COMMON HELPERS
