@@ -48,7 +48,7 @@ void CVSobelX(const CVImage &source, CVImage &dest, BorderWrappingType type, boo
 }
 
 
-void CVSobelSeparateX(const CVImage source, CVImage &dest, BorderWrappingType type, bool isNorm){
+void CVSobelSeparateX(const CVImage &source, CVImage &dest, BorderWrappingType type, bool isNorm){
 
     if(source.getHeight() != dest.getHeight() || source.getWidth() != dest.getWidth()){
         std::cerr<<"Sizes don't match";
@@ -153,7 +153,7 @@ void GaussSeparate(const CVImage &source, CVImage &dest, double sigma, BorderWra
     CVImage temp(source.getHeight(), source.getWidth());
     Convolute(source, temp, kernel1, type);
     Convolute(temp, dest, kernel2, type);
-    dest.normalize(0,255);
+   // dest.normalize(0,255);
 
 }
 
@@ -250,6 +250,8 @@ vector<FeaturePoint> harris(const CVImage &source, int windowHalfSize, double th
     }
 
     double sigma = (double) windowHalfSize / 3;
+    double denominator = (2 * 3.14 * sigma * sigma);
+    double degreeDenominator = 2 * sigma * sigma;
 
     for (int i = 0; i < n; i++){
         for (int j = 0; j < m; j++) {
@@ -260,7 +262,7 @@ vector<FeaturePoint> harris(const CVImage &source, int windowHalfSize, double th
 
                     int x = u ;
                     int y = v ;
-                    double value = exp(-(x * x + y * y) / (2 * sigma * sigma)) / (2 * 3.14 * sigma * sigma);
+                    double value = exp(-(x * x + y * y) / degreeDenominator) / denominator;
 
 
                     a += value * Ix2.getPixel(i + u, j + v);
@@ -287,10 +289,10 @@ vector<FeaturePoint> harris(const CVImage &source, int windowHalfSize, double th
     }
 
     vector<FeaturePoint> harrisPoints  =  findLocalMaximum(nonFilteredPoints, threshold);
-    return harrisPoints;
+   // return harrisPoints;
 
     double maxDistance = n * n + m * m;
-    return nonMaximumSuppression(harrisPoints, maxDistance);
+    return nonMaximumSuppression(harrisPoints, maxDistance, 50);
 }
 
 
@@ -344,37 +346,109 @@ CVImage  getSimpleDescriptors(const CVImage &source, vector<FeaturePoint> points
     CVImage detectors(points.size(), histCount * histCount * binCount);
     int cellInHistCount = cellCount / histCount;
 
+    double sigma = cellCount * size /  3;
+    double denominator = (2 * 3.14 * sigma * sigma);
+    double degreeDenominator = 2 * sigma * sigma;
+    double magicConst = 0.331832;
+
     for(int k = 0; k < points.size();k++){
+        //double SUPERSUM = 0;
         for(int i = -size;i < size; i++){
             for(int j = -size;j < size; j++){
                 for(int u = 0; u < cellInHistCount; u++){
                     for(int v = 0; v < cellInHistCount; v++){
-                        double valueX = Ix.getPixel( points[k].getX() + i * cellInHistCount + u,
-                                         points[k].getY() + j * cellInHistCount + v);
-                        double valueY = Iy.getPixel( points[k].getX() + i * cellInHistCount + u,
-                                         points[k].getY() + j * cellInHistCount + v);
-                        double angle = atan2(valueY,valueX) * 180 /3.14;
+
+                        //all hail gauss shift
+                        int x = i * cellInHistCount + u;
+                        int y = j * cellInHistCount + v;
+
+                        //getting shifted coordiantes
+                        double valueX = Ix.getPixel( points[k].getX() + x,
+                                         points[k].getY() + y);
+                        double valueY = Iy.getPixel( points[k].getX() + x,
+                                         points[k].getY() + y);
+                        double angle = atan2(valueY,valueX) * 180 /3.14 + 180;
+
+                       // cout<<angle<<endl;
                         double magnitude = sqrt(valueX * valueX + valueY * valueY);
-                        double binNum  = angle / binCount;
+
+                        int dang = 360 / binCount;
+                        double binNum  = angle / dang;
                         int divedBinNum = (int) binNum;
 
+
+                        double binFactor =  1 - (angle - divedBinNum * dang) / dang;
                         int row = (i + size) * histCount * binCount;
                         int column = (j + size) * binCount;
 
-                        detectors.setPixel(k,  row + column + divedBinNum % 8, magnitude);
+                        double gausWeight = exp(-(x * x + y * y) / degreeDenominator) / denominator / magicConst;
 
-                        if(fabs(binNum - divedBinNum) > 0.00001){
-                            detectors.setPixel(k,  row + column + (divedBinNum + 1) % 8, magnitude);
-                        }
+                        detectors.setPixel(k,  row + column + divedBinNum % 8,
+                                           magnitude * gausWeight * binFactor);
+                        detectors.setPixel(k,  row + column + (divedBinNum + 1) % 8,
+                                           magnitude * gausWeight * (1 - binFactor));
+
+                        //cout<< angle<<" "<<magnitude * gausWeight<<" "<< magnitude * gausWeight * binFactor<< " "<<magnitude * gausWeight * (1 - binFactor)<<endl;
+
+
+                        // SUPERSUM += gausWeight;
+                       // cout<<magnitude * gausWeight<<endl;
+
 
                     }
                 }
             }
         }
+        //cout<<SUPERSUM<<endl;
     }
 
     return detectors;
 }
+
+
+vector<Dmatch> matchDescriptors(const CVImage &descriptors1, const CVImage &descriptors2){
+
+    vector<Dmatch> answer;
+    if( descriptors1.getWidth() != descriptors2.getWidth()){
+        cout<<"Descriptors can't be matched"<<endl;
+        return answer;
+    }
+    int height1 = descriptors1.getHeight();
+    int height2 = descriptors2.getHeight();
+    int m = descriptors2.getWidth();
+    const double identityFactor = 0.8;
+
+    for(int i = 0;i < height1; i++){
+
+        double minDistance = INFINITY;
+        int minNumber = -1;
+        for(int j = 0; j < height2; j++){
+
+            double currentDistance = 0;
+            for(int k = 0; k < m; k++){
+
+                currentDistance += (descriptors1.getPixel(i,k) - descriptors2.getPixel(j, k)) *
+                        (descriptors1.getPixel(i,k) - descriptors2.getPixel(j, k));
+            }
+            if(currentDistance < minDistance){
+                if(minDistance != INFINITY){
+                    double ratioDistance = currentDistance / minDistance;
+                    if(ratioDistance > identityFactor){
+                        continue;
+                    }
+                }
+                minDistance = currentDistance;
+                minNumber = j;
+            }
+        }
+        //cout<<minDistance<<endl;
+         if(minDistance<20) answer.push_back(Dmatch(i, minNumber, minDistance));
+
+    }
+
+    return answer;
+}
+
 
 
 //COMMON HELPERS
@@ -392,4 +466,56 @@ void drawPoints(QImage &image, const vector<FeaturePoint> points){
             }
         }
     }
+}
+
+QImage drawMatches(const CVImage &first, CVImage &second, vector<FeaturePoint> points1, vector<FeaturePoint> points2, vector<Dmatch> matches){
+    int maxHeight = max(first.getHeight(), second. getHeight());
+
+     QImage final = QImage(first.getWidth() + second.getWidth(), maxHeight, QImage::Format_RGB32);
+
+
+     //Making doubleImage
+     for(int i=0; i<first.getHeight(); i++)
+     {
+         for(int j=0; j<first.getWidth(); j++)
+         {
+             int color = first.getPixel(i, j);
+             final.setPixel(j, i, qRgb(color,color,color));
+         }
+
+     }
+
+     for(int i=0; i<second.getHeight(); i++)
+     {
+         for(int j=0; j<second.getWidth(); j++)
+         {
+             int color = second.getPixel(i, j);
+             final.setPixel(j + first.getWidth(), i, qRgb(color,color,color));
+         }
+
+     }
+
+
+     //Shifting Points
+     for(int i = 0;i < points2.size(); i++){
+         points2[i].setY(points2[i].getY() + first.getWidth());
+     }
+
+     drawPoints(final, points1);
+     drawPoints(final, points2);
+
+      QPainter p(&final);
+
+        p.setRenderHint(QPainter::Antialiasing);
+        p.setPen(QPen(Qt::green, 1, Qt::SolidLine, Qt::SquareCap));
+
+        for(int i = 0;i < matches.size(); i++){
+//cout<<matches[i].distance<<endl;
+            p.drawLine(points1[matches[i].firstMatch].getY(), points1[matches[i].firstMatch].getX(), points2[matches[i].secondMatch].getY(), points2[matches[i].secondMatch].getX());
+
+        }
+
+         p.end(); // Don't forget this line!
+
+     return final;
 }

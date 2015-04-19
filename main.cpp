@@ -23,6 +23,11 @@ int main(int argc, char *argv[])
 
     CVImage image(CVImage::fromFile("image.png"));
     image.save("source.png");
+
+
+    CVImage evilImage(CVImage::fromFile("10.png"));
+    evilImage.save("source2.png");
+
     //image.downscale(2);
     //image.save("resized.png");
 //    CVImage t(image.getHeight(),image.getWidth());
@@ -31,7 +36,34 @@ int main(int argc, char *argv[])
 
 
 
-    ////LAB 3
+    ///LAB4
+
+
+
+    CVImage f1(image.getHeight(),image.getWidth());
+    GaussSeparate(image, f1, 0.3);
+    vector<FeaturePoint> points1 = harris(f1, 5, 10000);// Maybe 0.001?
+    CVImage descriptors1(getSimpleDescriptors(f1, points1));
+
+
+
+    CVImage f2(evilImage.getHeight(),evilImage.getWidth());
+    GaussSeparate(evilImage, f2, 0.3);
+    vector<FeaturePoint> points2 = harris(f2, 5, 10000);// Maybe 0.001?
+    CVImage descriptors2(getSimpleDescriptors(f2, points2));
+
+
+    vector<Dmatch> matches = matchDescriptors(descriptors1, descriptors2);
+
+    QImage matching = drawMatches(image, evilImage, points1, points2, matches);
+
+    matching.save("harris.png");
+
+
+    /// END OF LAB4
+
+
+//    ////LAB 3
 
 //    vector<FeaturePoint> points = moravec(image, 2, 3);
 //    QImage moravec(image.toQImage());
@@ -39,16 +71,16 @@ int main(int argc, char *argv[])
 //    moravec.save("moravec.png");
 
 
-    CVImage u(image.getHeight(),image.getWidth());
-    GaussSeparate(image, u, 0.3);
-    vector<FeaturePoint> points2 = harris(u, 3, 0.001);// Maybe 0.001?
-    getSimpleDescriptors(image, points2);
-    QImage har(image.toQImage());
-    drawPoints(har, points2);
-    har.save("harris.png");
+//    CVImage u(image.getHeight(),image.getWidth());
+//    GaussSeparate(image, u, 0.3);
+//    vector<FeaturePoint> points2 = harris(u, 3, 2000);// Maybe 0.001?
+//    getSimpleDescriptors(image, points2);
+//    QImage har(image.toQImage());
+//    drawPoints(har, points2);
+//    har.save("harris.png");
 
 
-    /// END OF LAB3
+//    /// END OF LAB3
 
 
 
