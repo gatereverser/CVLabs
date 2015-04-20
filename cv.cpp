@@ -346,7 +346,7 @@ CVImage  getSimpleDescriptors(const CVImage &source, vector<FeaturePoint> points
     CVImage detectors(points.size(), histCount * histCount * binCount);
     int cellInHistCount = cellCount / histCount;
 
-    double sigma = cellCount * size /  3;
+    double sigma = cellCount / 2; // * size /  3;
     double denominator = (2 * 3.14 * sigma * sigma);
     double degreeDenominator = 2 * sigma * sigma;
     double magicConst = 0.331832;
@@ -400,6 +400,11 @@ CVImage  getSimpleDescriptors(const CVImage &source, vector<FeaturePoint> points
             }
         }
         //cout<<SUPERSUM<<endl;
+//        for(int i = 0; i < 128;i++){
+//            cout<< detectors.getPixel(k,i)<< endl;
+//        }
+//        cout<<endl;
+        ///NORMALIZE HERE
     }
 
     return detectors;
@@ -442,7 +447,7 @@ vector<Dmatch> matchDescriptors(const CVImage &descriptors1, const CVImage &desc
             }
         }
         //cout<<minDistance<<endl;
-         if(minDistance<20) answer.push_back(Dmatch(i, minNumber, minDistance));
+         if(minDistance < 20) answer.push_back(Dmatch(i, minNumber, minDistance));
 
     }
 

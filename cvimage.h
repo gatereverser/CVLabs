@@ -34,7 +34,7 @@ public:
     //DOn't forget to make operator = for copying
     CVImage& operator=(CVImage&& other);
 
-  // CVImage& operator=(CVImage& other) = default;
+    CVImage& operator=(CVImage& anotherImage);
 
     static CVImage fromFile(const QString &fileName);
     static CVImage fromQImage(const QImage &qImage);

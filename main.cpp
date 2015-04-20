@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     image.save("source.png");
 
 
-    CVImage evilImage(CVImage::fromFile("10.png"));
+    CVImage evilImage(CVImage::fromFile("12.png"));
     evilImage.save("source2.png");
 
     //image.downscale(2);
@@ -85,13 +85,13 @@ int main(int argc, char *argv[])
 
 
 
-//    ////LAB 2
+    ////LAB 2
 
-//Pyramid pyr(Pyramid::Build(image,3,6,1.6));
-//pyr.save("sem");
-//cerr<<pyr.findPixel(125,150,0.6)<<endl;
+Pyramid pyr(Pyramid::Build(image,3,6,1.6));
+pyr.save("sem");
+cerr<<pyr.findPixel(125,150,0.6)<<endl;
 
-//    /// END OF LAB2
+    /// END OF LAB2
 
 // //// LAB 1
 

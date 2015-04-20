@@ -55,6 +55,26 @@ CVImage& CVImage::operator=(CVImage&& other) // move assignment
     return *this;
 }
 
+CVImage& CVImage::operator=(CVImage& other) // move assignment
+{
+    if (this == &other) {
+        return *this;
+    }
+
+    height = other.height;
+    width = other.width;
+
+    data = std::make_unique<double[]>(height*width);
+    for (int i = 0; i < height*width; ++i)
+        data[i] = other.data[i];
+
+
+    return *this;
+
+
+
+}
+
 
 
 CVImage::~ CVImage()

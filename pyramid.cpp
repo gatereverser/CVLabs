@@ -38,12 +38,13 @@ Pyramid Pyramid::Build(const CVImage &image, int octaveNum, int levelNum, double
 
                 CVImage next(initial.getHeight(), initial.getWidth());
                 GaussSeparate(initial, next,sigma0Start* pow(k,j),BorderWrappingType::ReflectBorder);
-                result.images.push_back(next);
+                if(j == levelNum-1)initial = next;
+                result.images.push_back(next);                
                 result.currentSigma.push_back(sigma0Start* pow(k,j));
                 result.realSigma.push_back(octaveSigma * pow(k,j));
                 result.currentOctave.push_back(i);
-
                 cerr<<sigma0Start * pow(k,j)<<" "<<octaveSigma * pow(k,j)<<endl;
+
             }
 
             initial = initial.downscale(2);
