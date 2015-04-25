@@ -289,7 +289,7 @@ vector<FeaturePoint> harris(const CVImage &source, int windowHalfSize, double th
     }
 
     vector<FeaturePoint> harrisPoints  =  findLocalMaximum(nonFilteredPoints, threshold);
-   // return harrisPoints;
+    //return harrisPoints;
 
     double maxDistance = n * n + m * m;
     return nonMaximumSuppression(harrisPoints, maxDistance, 50);
@@ -349,57 +349,63 @@ CVImage  getSimpleDescriptors(const CVImage &source, vector<FeaturePoint> points
     double sigma = cellCount / 2; // * size /  3;
     double denominator = (2 * 3.14 * sigma * sigma);
     double degreeDenominator = 2 * sigma * sigma;
-    double magicConst = 0.331832;
+    double magicConst = 0.465644;
+
+    //REINFROCE
+    int halfSize = cellCount / 2;
 
     for(int k = 0; k < points.size();k++){
-        //double SUPERSUM = 0;
-        for(int i = -size;i < size; i++){
-            for(int j = -size;j < size; j++){
-                for(int u = 0; u < cellInHistCount; u++){
-                    for(int v = 0; v < cellInHistCount; v++){
-
-                        //all hail gauss shift
-                        int x = i * cellInHistCount + u;
-                        int y = j * cellInHistCount + v;
-
-                        //getting shifted coordiantes
-                        double valueX = Ix.getPixel( points[k].getX() + x,
-                                         points[k].getY() + y);
-                        double valueY = Iy.getPixel( points[k].getX() + x,
-                                         points[k].getY() + y);
-                        double angle = atan2(valueY,valueX) * 180 /3.14 + 180;
-
-                       // cout<<angle<<endl;
-                        double magnitude = sqrt(valueX * valueX + valueY * valueY);
-
-                        int dang = 360 / binCount;
-                        double binNum  = angle / dang;
-                        int divedBinNum = (int) binNum;
+        // double SUPERSUM = 0;
+        int posX = points[k].getX();
+        int posY = points[k].getY();
+        for(int i = posX - halfSize;i < posX + halfSize; i++){
+            for(int j = posY - halfSize;j < posY + halfSize; j++){
 
 
-                        double binFactor =  1 - (angle - divedBinNum * dang) / dang;
-                        int row = (i + size) * histCount * binCount;
-                        int column = (j + size) * binCount;
+                //gauss shift
+                double x = i - posX;
+                double y = j - posY;
 
-                        double gausWeight = exp(-(x * x + y * y) / degreeDenominator) / denominator / magicConst;
+                //getting shifted coordiantes
+                double valueX = Ix.getPixel(i, j);
+                double valueY = Iy.getPixel(i,j);
+                double angle = atan2(valueY,valueX) * 180 /3.14 + 180;
 
-                        detectors.setPixel(k,  row + column + divedBinNum % 8,
-                                           magnitude * gausWeight * binFactor);
-                        detectors.setPixel(k,  row + column + (divedBinNum + 1) % 8,
-                                           magnitude * gausWeight * (1 - binFactor));
+               // cout<<angle<<endl;
+                double magnitude = sqrt(valueX * valueX + valueY * valueY);
 
-                        //cout<< angle<<" "<<magnitude * gausWeight<<" "<< magnitude * gausWeight * binFactor<< " "<<magnitude * gausWeight * (1 - binFactor)<<endl;
-
-
-                        // SUPERSUM += gausWeight;
-                       // cout<<magnitude * gausWeight<<endl;
+                int dang = 360 / binCount;
+                double binNum  = angle / dang;
+                int divedBinNum = (int) binNum;
 
 
-                    }
-                }
+                double binFactor =  1 - (angle - divedBinNum * dang) / dang;
+
+                //consider in what hist it belongs
+                int binX = (x + halfSize)/ (halfSize / 2);
+                int binY = (y + halfSize)/ (halfSize / 2);
+
+                //cout<< binX<<" "<<binY<<endl;
+
+                int row = binX * histCount * binCount;
+                int column = binY * binCount;
+
+                double gausWeight = exp(-(x * x + y * y) / degreeDenominator) / denominator / magicConst;
+//cout<<gausWeight<<endl;
+
+                detectors.setPixel(k,  row + column + divedBinNum % 8,
+                                   detectors.getPixel(k,  row + column + divedBinNum % 8) + magnitude * gausWeight * binFactor);
+                detectors.setPixel(k,  row + column + (divedBinNum + 1) % 8,
+                                   detectors.getPixel(k,  row + column + (divedBinNum + 1) % 8) + magnitude * gausWeight * (1 - binFactor));
+
+                //cout<< angle<<" "<<magnitude * gausWeight<<" "<< magnitude * gausWeight * binFactor<< " "<<magnitude * gausWeight * (1 - binFactor)<<endl;
+
+
+                // SUPERSUM += gausWeight;
+               // cout<<magnitude * gausWeight<<endl;
             }
         }
-        //cout<<SUPERSUM<<endl;
+//        cout<<SUPERSUM<<endl;
 //        for(int i = 0; i < 128;i++){
 //            cout<< detectors.getPixel(k,i)<< endl;
 //        }
@@ -426,7 +432,9 @@ vector<Dmatch> matchDescriptors(const CVImage &descriptors1, const CVImage &desc
     for(int i = 0;i < height1; i++){
 
         double minDistance = INFINITY;
+        double secondMinDistance = INFINITY;
         int minNumber = -1;
+        int secondMinNumer = -1;
         for(int j = 0; j < height2; j++){
 
             double currentDistance = 0;
@@ -436,20 +444,23 @@ vector<Dmatch> matchDescriptors(const CVImage &descriptors1, const CVImage &desc
                         (descriptors1.getPixel(i,k) - descriptors2.getPixel(j, k));
             }
             if(currentDistance < minDistance){
-                if(minDistance != INFINITY){
-                    double ratioDistance = currentDistance / minDistance;
-                    if(ratioDistance > identityFactor){
-                        continue;
-                    }
-                }
+
+                secondMinDistance = minDistance;
+                secondMinNumer = minNumber;
                 minDistance = currentDistance;
                 minNumber = j;
             }
         }
         //cout<<minDistance<<endl;
-         if(minDistance < 20) answer.push_back(Dmatch(i, minNumber, minDistance));
 
+        //INSERT RATIO CHECK
+        answer.push_back(Dmatch(i, minNumber, minDistance));
+        double ratioDistance = minDistance / secondMinDistance;
+        if(ratioDistance < identityFactor){
+           // answer.push_back(Dmatch(i, secondMinNumer, secondMinDistance));
+        }
     }
+
 
     return answer;
 }
