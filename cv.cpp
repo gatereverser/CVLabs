@@ -253,8 +253,8 @@ vector<FeaturePoint> harris(const CVImage &source, int windowHalfSize, double th
     double denominator = (2 * 3.14 * sigma * sigma);
     double degreeDenominator = 2 * sigma * sigma;
 
-    for (int i = 0; i < n; i++){
-        for (int j = 0; j < m; j++) {
+    for (int i = windowHalfSize; i < n - windowHalfSize; i++){
+        for (int j = windowHalfSize; j < m - windowHalfSize; j++) {
             double a = 0, b = 0, c = 0;
             double weightedSum = 0;
             for (int u = -windowHalfSize; u <= windowHalfSize; u++){
@@ -289,10 +289,10 @@ vector<FeaturePoint> harris(const CVImage &source, int windowHalfSize, double th
     }
 
     vector<FeaturePoint> harrisPoints  =  findLocalMaximum(nonFilteredPoints, threshold);
-    //return harrisPoints;
+   // return harrisPoints;
 
     double maxDistance = n * n + m * m;
-    return nonMaximumSuppression(harrisPoints, maxDistance, 50);
+    return nonMaximumSuppression(harrisPoints, maxDistance, 100);
 }
 
 
@@ -343,6 +343,20 @@ CVImage  getSimpleDescriptors(const CVImage &source, vector<FeaturePoint> points
     CVSobelSeparateX(source, Ix);
     CVSobelSeparateY(source, Iy);
 
+    CVImage magnitudes(n, m);
+    CVImage angles(n, m);
+    for (int i = 0; i < n; i++){
+        for (int j = 0; j < m; j++) {
+            double valueX = Ix.getPixel(i, j);
+            double valueY = Iy.getPixel(i,j);
+
+            magnitudes.setPixel(i, j, sqrt(valueX * valueX + valueY * valueY));
+            angles.setPixel(i, j, atan2(valueY,valueX) * 180 /3.14 + 180);
+        }
+    }
+
+
+
     CVImage detectors(points.size(), histCount * histCount * binCount);
     int cellInHistCount = cellCount / histCount;
 
@@ -366,18 +380,12 @@ CVImage  getSimpleDescriptors(const CVImage &source, vector<FeaturePoint> points
                 double x = i - posX;
                 double y = j - posY;
 
-                //getting shifted coordiantes
-                double valueX = Ix.getPixel(i, j);
-                double valueY = Iy.getPixel(i,j);
-                double angle = atan2(valueY,valueX) * 180 /3.14 + 180;
-
-               // cout<<angle<<endl;
-                double magnitude = sqrt(valueX * valueX + valueY * valueY);
+                double angle = angles.getPixel(i,j);
+                double magnitude = magnitudes.getPixel(i,j);
 
                 int dang = 360 / binCount;
                 double binNum  = angle / dang;
                 int divedBinNum = (int) binNum;
-
 
                 double binFactor =  1 - (angle - divedBinNum * dang) / dang;
 
@@ -391,7 +399,7 @@ CVImage  getSimpleDescriptors(const CVImage &source, vector<FeaturePoint> points
                 int column = binY * binCount;
 
                 double gausWeight = exp(-(x * x + y * y) / degreeDenominator) / denominator / magicConst;
-//cout<<gausWeight<<endl;
+                //cout<<gausWeight<<endl;
 
                 detectors.setPixel(k,  row + column + divedBinNum % 8,
                                    detectors.getPixel(k,  row + column + divedBinNum % 8) + magnitude * gausWeight * binFactor);
@@ -454,11 +462,14 @@ vector<Dmatch> matchDescriptors(const CVImage &descriptors1, const CVImage &desc
         //cout<<minDistance<<endl;
 
         //INSERT RATIO CHECK
-        answer.push_back(Dmatch(i, minNumber, minDistance));
-        double ratioDistance = minDistance / secondMinDistance;
-        if(ratioDistance < identityFactor){
-           // answer.push_back(Dmatch(i, secondMinNumer, secondMinDistance));
+        answer.emplace_back(Dmatch(i, minNumber, minDistance));
+        if(secondMinNumer!=-1){
+            double ratioDistance = minDistance / secondMinDistance;
+            if(ratioDistance < identityFactor){
+              // answer.emplace_back(Dmatch(i, secondMinNumer, secondMinDistance));
+            }
         }
+
     }
 
 

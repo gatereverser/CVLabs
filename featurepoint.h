@@ -5,11 +5,17 @@ class FeaturePoint
     double weight;
     int x;
     int y;
+    double scale;
+    double orientation;
 
 public:
     FeaturePoint (int i, int j, double k) : x(i), y(j), weight(k) {}
+    FeaturePoint (int i, int j, double k, double sc) : x(i), y(j), weight(k), scale(sc) {}
+    FeaturePoint (int i, int j, double k, double sc, double oriental) : x(i), y(j), weight(k), scale(sc), orientation(oriental){}
     inline int getX() { return x;}
     inline int getY() { return y;}
+    inline int getScale() { return scale;}
+    inline int getOrientation() { return orientation;}
     inline void setX(int i){
         x = i;
     }

@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     image.save("source.png");
 
 
-    CVImage evilImage(CVImage::fromFile("6.png"));
+    CVImage evilImage(CVImage::fromFile("8.png"));
     evilImage.save("source2.png");
 
     //image.downscale(2);
