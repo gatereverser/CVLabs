@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     image.save("source.png");
 
 
-    CVImage evilImage(CVImage::fromFile("8.png"));
+    CVImage evilImage(CVImage::fromFile("13.jpg"));
     evilImage.save("source2.png");
 
     //image.downscale(2);
@@ -34,33 +34,38 @@ int main(int argc, char *argv[])
 //    GaussSeparate(image,t,6, BorderWrappingType::CopyBorder);
 //    t.save("gaussed.png");
 
+///LAB5
+    Pyramid pyr(Pyramid::Build(image,3,6,1.6));
+    Pyramid DOG(Pyramid::BuildDOG(pyr));
+    DOG.save("sem");
+///
 
 
-    ///LAB4
-
-
-
-    CVImage f1(image.getHeight(),image.getWidth());
-    GaussSeparate(image, f1, 0.3);
-    vector<FeaturePoint> points1 = harris(f1, 5, 10000);// Maybe 0.001?
-    CVImage descriptors1(getSimpleDescriptors(f1, points1));
+//    ///LAB4
 
 
 
-    CVImage f2(evilImage.getHeight(),evilImage.getWidth());
-    GaussSeparate(evilImage, f2, 0.3);
-    vector<FeaturePoint> points2 = harris(f2, 5, 10000);// Maybe 0.001?
-    CVImage descriptors2(getSimpleDescriptors(f2, points2));
+//    CVImage f1(image.getHeight(),image.getWidth());
+//    GaussSeparate(image, f1, 0.3);
+//    vector<FeaturePoint> points1 = harris(f1, 3, 10000);// Maybe 0.001?
+//    CVImage descriptors1(getSimpleDescriptors(f1, points1));
 
 
-    vector<Dmatch> matches = matchDescriptors(descriptors1, descriptors2);
 
-    QImage matching = drawMatches(image, evilImage, points1, points2, matches);
+//    CVImage f2(evilImage.getHeight(),evilImage.getWidth());
+//    GaussSeparate(evilImage, f2, 0.3);
+//    vector<FeaturePoint> points2 = harris(f2, 3, 10000);// Maybe 0.001?
+//    CVImage descriptors2(getSimpleDescriptors(f2, points2));
 
-    matching.save("harris.png");
+
+//    vector<Dmatch> matches = matchDescriptors(descriptors1, descriptors2);
+
+//    QImage matching = drawMatches(image, evilImage, points1, points2, matches);
+
+//    matching.save("harris.png");
 
 
-    /// END OF LAB4
+//    /// END OF LAB4
 
 
 //    ////LAB 3

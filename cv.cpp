@@ -289,7 +289,7 @@ vector<FeaturePoint> harris(const CVImage &source, int windowHalfSize, double th
     }
 
     vector<FeaturePoint> harrisPoints  =  findLocalMaximum(nonFilteredPoints, threshold);
-   // return harrisPoints;
+    return harrisPoints;
 
     double maxDistance = n * n + m * m;
     return nonMaximumSuppression(harrisPoints, maxDistance, 100);
@@ -534,10 +534,11 @@ QImage drawMatches(const CVImage &first, CVImage &second, vector<FeaturePoint> p
       QPainter p(&final);
 
         p.setRenderHint(QPainter::Antialiasing);
-        p.setPen(QPen(Qt::green, 1, Qt::SolidLine, Qt::SquareCap));
+      // p.setPen(QPen(Qt::green, 1, Qt::SolidLine, Qt::SquareCap));
 
         for(int i = 0;i < matches.size(); i++){
 //cout<<matches[i].distance<<endl;
+            p.setPen(QColor(abs(rand()) % 256, abs(rand()) % 256, abs(rand()) % 256));
             p.drawLine(points1[matches[i].firstMatch].getY(), points1[matches[i].firstMatch].getX(), points2[matches[i].secondMatch].getY(), points2[matches[i].secondMatch].getX());
 
         }

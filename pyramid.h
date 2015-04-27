@@ -21,5 +21,8 @@ public:
 
     static Pyramid Build(const CVImage &image, int octaveNum, int levelNum, double sigma0Start = 1, double sigmaImage = 0.5);
 
+    static Pyramid BuildDOG(Pyramid &pyramid);
+
+
     double findPixel(int x, int y, float sigma);
 };

@@ -59,6 +59,30 @@ Pyramid Pyramid::Build(const CVImage &image, int octaveNum, int levelNum, double
     }
 }
 
+Pyramid Pyramid::BuildDOG(Pyramid &pyramid){
+    Pyramid result(pyramid.octaveCount, pyramid.levelsCount - 1);
+
+    for(int i=0; i < pyramid.images.size() - 1; i++)
+    {
+        if(pyramid.currentOctave[i] == pyramid.currentOctave[i + 1])
+        {
+            CVImage next(pyramid.images[i].getHeight(), pyramid.images[i].getWidth());
+            for(int u = 0; u < next.getHeight(); u++){
+                for(int v = 0; v < next.getWidth(); v++){
+                    next.setPixel(u, v, pyramid.images[i + 1].getPixel(u,v) - pyramid.images[i].getPixel(u,v));
+                }
+            }
+            result.images.push_back(next);
+            result.currentSigma.push_back(pyramid.currentSigma[i]);
+            result.realSigma.push_back(pyramid.realSigma[i]);
+            result.currentOctave.push_back(pyramid.currentOctave[i]);
+        }
+    }
+
+    return result;
+}
+
+
 double Pyramid::findPixel(int x, int y, float sigma)
 {
     if(sigma <= realSigma[0])

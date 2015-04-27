@@ -21,7 +21,7 @@ void CVSobelSeparateY(const CVImage &source, CVImage &dest, BorderWrappingType t
 void CVSobel(const CVImage &source, CVImage &dest, BorderWrappingType type = BorderWrappingType::ZeroBorder);
 void GaussSeparate(const CVImage &source, CVImage &dest, double sigma, BorderWrappingType type = BorderWrappingType::ZeroBorder);
 
-vector<FeaturePoint> findLocalMaximum(const CVImage& nonFilteredPoints, double threshold, int surroundingsHalfSize = 5);
+vector<FeaturePoint> findLocalMaximum(const CVImage& nonFilteredPoints, double threshold, int surroundingsHalfSize = 3);
 vector<FeaturePoint> moravec(const CVImage &source, int windowHalfSize, double threshold, BorderWrappingType type = BorderWrappingType::ZeroBorder);
 vector<FeaturePoint> harris(const CVImage &source, int windowHalfSize, double threshold, double k = 0.04,  BorderWrappingType type = BorderWrappingType::ZeroBorder);
 vector<FeaturePoint> nonMaximumSuppression(const vector<FeaturePoint> &nonSuppressedPoints, double maxDistance,  int count = 500, int stepCount = 5000, double weightFactor = 0.9);
