@@ -22,6 +22,9 @@ public:
     inline void setY(int i){
         y = i;
     }
+    inline void setWeight(double i){
+        weight = i;
+    }
     inline int getWei() { return weight;}
     inline double getDistance( FeaturePoint other){
         return pow(x - other.getX(), 2) + pow(y - other.getY(), 2);

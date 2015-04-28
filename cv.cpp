@@ -153,7 +153,7 @@ void GaussSeparate(const CVImage &source, CVImage &dest, double sigma, BorderWra
     CVImage temp(source.getHeight(), source.getWidth());
     Convolute(source, temp, kernel1, type);
     Convolute(temp, dest, kernel2, type);
-   // dest.normalize(0,255);
+    dest.normalize(0,255);
 
 }
 
@@ -425,6 +425,10 @@ CVImage  getSimpleDescriptors(const CVImage &source, vector<FeaturePoint> points
 }
 
 
+//LAB5
+
+
+
 vector<Dmatch> matchDescriptors(const CVImage &descriptors1, const CVImage &descriptors2){
 
     vector<Dmatch> answer;
@@ -494,6 +498,30 @@ void drawPoints(QImage &image, const vector<FeaturePoint> points){
         }
     }
 }
+
+
+void drawBlobs(QImage &image, vector<FeaturePoint> points){
+
+//    for (FeaturePoint point : points) {
+
+//        image.setPixel(point.getY(), point.getX(), 255 << 16);
+
+//    }
+
+    QPainter p(&image);
+
+    p.setRenderHint(QPainter::Antialiasing);
+    p.setPen(QPen(Qt::red, 1, Qt::SolidLine, Qt::SquareCap));
+
+    for(int i = 0;i < points.size(); i++){
+        p.drawEllipse(QPointF(points[i].getY(),points[i].getX()), points[i].getScale()* sqrt(2), points[i].getScale()*sqrt(2));
+    }
+
+    p.end(); // Don't forget this line!
+
+
+}
+
 
 QImage drawMatches(const CVImage &first, CVImage &second, vector<FeaturePoint> points1, vector<FeaturePoint> points2, vector<Dmatch> matches){
     int maxHeight = max(first.getHeight(), second. getHeight());

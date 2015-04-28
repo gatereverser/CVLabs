@@ -8,10 +8,11 @@ class Pyramid
 {
     int octaveCount;
     int levelsCount;
-    vector<CVImage> images;
+
     vector<double> currentSigma;
-    vector<double> realSigma;
     vector<int> currentOctave;
+    vector<double> realSigma;
+    vector<CVImage> images;
 
 public:
     Pyramid(int octaves, int levels);
@@ -23,6 +24,7 @@ public:
 
     static Pyramid BuildDOG(Pyramid &pyramid);
 
+    vector<FeaturePoint> getBlobFeaturePoints();
 
     double findPixel(int x, int y, float sigma);
 };

@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
 
 
 
-    CVImage image(CVImage::fromFile("image.png"));
+    CVImage image(CVImage::fromFile("14.jpg"));
     image.save("source.png");
 
 
@@ -35,9 +35,20 @@ int main(int argc, char *argv[])
 //    t.save("gaussed.png");
 
 ///LAB5
-    Pyramid pyr(Pyramid::Build(image,3,6,1.6));
+    Pyramid pyr(Pyramid::Build(image,5,6,1));
     Pyramid DOG(Pyramid::BuildDOG(pyr));
+    //CVSobel(DOG.images[4],DOG.images[1]);
     DOG.save("sem");
+
+    vector<FeaturePoint> points3 = DOG.getBlobFeaturePoints();
+
+    cout<<points3.size();
+
+        QImage har(image.toQImage());
+        drawBlobs(har, points3);
+        har.save("blobs.png");
+
+
 ///
 
 

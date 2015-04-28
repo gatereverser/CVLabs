@@ -159,21 +159,29 @@ void CVImage::normalize(double newMin, double newMax)
 
 CVImage CVImage::downscale(int size)
 {
-    unique_ptr<double[]> result = make_unique<double[]>(height/size * width/size);
+   // unique_ptr<double[]> result = make_unique<double[]>(height/size * width/size);
 
-    for(int i=0; i< height - 1; i+=size)
-    {
-        // cout<<i<<endl;
-        for(int j=0; j< width - 1; j+=size)
-        {
+//    for(int i=0; i< height - 1; i+=size)
+//    {
+//        // cout<<i<<endl;
+//        for(int j=0; j< width - 1; j+=size)
+//        {
 
-            result[i*width / (size*size) + j/size] = getPixel(i,j);
-        }
+//            result[i*width / (size*size) + j/size] = getPixel(i,j);
+//        }
 
-    }
+//    }
 
     CVImage resultImage(height/size, width/size);
-    resultImage.data = move(result);
+
+    for(int i = 0; i < resultImage.getHeight(); i++)
+    {
+        for(int  j = 0; j < resultImage.getWidth(); j++)
+        {
+            resultImage.setPixel(i,j,getPixel(i * size, j * size));
+        }
+    }
+
     return resultImage;
 }
 

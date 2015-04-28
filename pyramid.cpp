@@ -82,6 +82,44 @@ Pyramid Pyramid::BuildDOG(Pyramid &pyramid){
     return result;
 }
 
+vector<FeaturePoint> Pyramid::getBlobFeaturePoints(){
+
+    vector<FeaturePoint> points;
+
+    for(int i = images.size() - 2; i > 0;i--){
+
+        int borderY = images[i].getHeight() /10;
+        int borderX = images[i].getWidth() /10;
+
+        for(int j = borderY; j < images[i].getHeight() - borderY;j++){
+            for(int k = borderX; k < images[i].getWidth() - borderX;k++){
+                bool isMaximum  = true;
+                for (int u = 0; u < 8; u++) {
+
+                    if(images[i].getPixel(j,k) < images[i].getPixel(j + dx[u],k + dx[u])){
+                        isMaximum = false;
+                        break;
+                    }
+                }
+
+                if( isMaximum
+                    && images[i].getPixel(j,k) > images[i+1].getPixel(j,k)
+                    && images[i].getPixel(j,k) > images[i - 1].getPixel(j,k)){
+
+                    points.emplace_back(FeaturePoint(j, k, 0, realSigma[i]));
+                    cout<<realSigma[i]<<" SDFDG"<<endl;
+
+                }
+
+            }
+        }
+    }
+
+
+    return points;
+}
+
+
 
 double Pyramid::findPixel(int x, int y, float sigma)
 {
