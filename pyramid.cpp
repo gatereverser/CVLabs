@@ -139,6 +139,7 @@ vector<FeaturePoint> Pyramid::getBlobFeaturePoints(){
 
     //cout<<dog.images[0].getPixel(125,122)<<" ADOLF";
     vector<FeaturePoint> points;
+    points.clear();
 
     for(int i = 0 ;i < octaveCount; i++){
         for(int j = 1; j < levelsCount - 2; j++){
@@ -176,12 +177,16 @@ vector<FeaturePoint> Pyramid::getBlobFeaturePoints(){
                     bool isMinimum = true;
 
                     for (int t = 0; t < 26; t++) {
+
                         if (dog.images[current].getPixel(u, v) <=
-                                dog.images[current + dz3d[t]].getPixel(i + dx3d[t], j + dy3d[t])){
+                                dog.images[current + dz3d[t]].getPixel(u + dx3d[t], v + dy3d[t])){
                             isMaximum = false;
                         }
+//                        else{
+//                            cout<< dog.images[current].getPixel(u, v) - dog.images[current + dz3d[t]].getPixel(i + dx3d[t], j + dy3d[t])<<endl;
+//                        }
                         if (dog.images[current].getPixel(u, v) >=
-                                dog.images[current + dz3d[t]].getPixel(i + dx3d[t], j + dy3d[t])){
+                                dog.images[current + dz3d[t]].getPixel(i + dx3d[t], j + dy3d[t]) || dog.images[current].getPixel(u, v) <=0 ){
                             isMinimum = false;
                         }
                         if (!isMaximum && !isMinimum){
@@ -189,31 +194,26 @@ vector<FeaturePoint> Pyramid::getBlobFeaturePoints(){
                         }
                     }
 
-                    if(isMaximum || isMinimum){ //CHANGE THIS GODDAMN CODE
-                        bool truth = false;
-                        for(int h = 0;(h < harpoints.size())&&!truth;h++){
-                            if(harpoints[h].getX() == u && harpoints[h].getY() == v){
-                                truth = true;
-                            }
-                        }
-                        if(!truth) continue;
-//                        double dxx = Ixx.getPixel(u, v), dxy = Ixy.getPixel(u, v), dyy = Iyy.getPixel(u, v),
-//                             tr  = dxx + dyy,
-//                             det = dxx * dyy - dxy * dxy;
-//                        if (tr * tr / det < 12.1)
-//                            continue;
+                    if(isMaximum  || isMinimum){ //CHANGE THIS GODDAMN CODE
+//                        bool truth = false;
+//                        for(int h = 0;(h < harpoints.size())&&!truth;h++){
+//                            if(harpoints[h].getX() == u && harpoints[h].getY() == v){
+//                                truth = true;
+//                            }
+//                        }
+//                        if(!truth) continue;
 
-//                        auto dx = Ix.getPixel(u, v), dy = Iy.getPixel(u, v),
-//                             di = -(  dx * dyy - dy * dxy) / det,
-//                             dj = -(- dx * dxy + dy * dxx) / det;
 
-//                        di = di < -1 ? -1 : di > 1 ? 1 : di;
-//                        dj = dj < -1 ? -1 : dj > 1 ? 1 : dj;
-//                        if (fabs(dog.images[current].getPixel(u, v) - 0.5 * (dx * di + dy * dj)) < 0.03)
-//                            continue;
+                        double dxx = Ixx.getPixel(u, v),
+                             dxy = Ixy.getPixel(u, v),
+                             dyy = Iyy.getPixel(u, v),
+                             trace  = dxx + dyy,
+                             determinat = dxx * dyy - dxy * dxy;
+                        if (trace * trace / determinat < 12.1)
+                            continue;
 
                        // if( realSigma[i * (levelsCount) + j] > 4.8)
-                        points.emplace_back(u , v , realSigma[i * (levelsCount) + j], i * (levelsCount) + j);
+                     points.emplace_back(u , v , realSigma[i * (levelsCount) + j], i * (levelsCount) + j);
                         // *pow(2, currentOctave[i * (levelsCount) + j])
                         //cout<<realSigma[i * (levelsCount) + j]<<endl;
                     }
@@ -224,7 +224,7 @@ vector<FeaturePoint> Pyramid::getBlobFeaturePoints(){
 
         }
     }
-    cout<<points.size()<< "OLOLO"<<endl;
+    // cout<<points.size()<< "OLOLO"<<endl;
 
     return points;
 }
@@ -283,7 +283,7 @@ CVImage  Pyramid::getSimpleDescriptors( vector<FeaturePoint> points, int binCoun
         //REINFROCE
         int halfSize = cellCount / 2 * currentSigma[points[k].getLevel()];;
 
-         double SUPERSUM = 0;
+//         double SUPERSUM = 0;
         int posX = points[k].getX();
         int posY = points[k].getY();
         for(int i = posX - halfSize;i < posX + halfSize; i++){
@@ -323,13 +323,14 @@ CVImage  Pyramid::getSimpleDescriptors( vector<FeaturePoint> points, int binCoun
                 //cout<< angle<<" "<<magnitude * gausWeight<<" "<< magnitude * gausWeight * binFactor<< " "<<magnitude * gausWeight * (1 - binFactor)<<endl;
 
 
-                 SUPERSUM += gausWeight;
+//                 SUPERSUM += gausWeight;
             }
         }
 
 
-        if(SUPERSUM > 3)
-        cout<<SUPERSUM<<endl;
+//        if(SUPERSUM > 3)
+//        cout<<SUPERSUM<<endl;
+
 //        for(int i = 0; i < 128;i++){
 //            cout<< detectors.getPixel(k,i)<< endl;
 //        }

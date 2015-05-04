@@ -46,25 +46,25 @@ int main(int argc, char *argv[])
     //Pyramid DOG(Pyramid::BuildDOG(pyr));
     //CVSobel(DOG.images[4],DOG.images[1]);
     //pyr.save("sem");
-    vector<FeaturePoint> points4 = pyr2.getBlobFeaturePoints();
+//    vector<FeaturePoint> points4 = pyr2.getBlobFeaturePoints();
 
 
-    CVImage descriptors3 (pyr.getSimpleDescriptors(points3));
-    CVImage descriptors4(pyr2.getSimpleDescriptors(points4));
+//    CVImage descriptors3 (pyr.getSimpleDescriptors(points3));
+//    CVImage descriptors4(pyr2.getSimpleDescriptors(points4));
 
 
 
-    vector<Dmatch> matches = matchDescriptors(descriptors3, descriptors4);
+//    vector<Dmatch> matches = matchDescriptors(descriptors3, descriptors4);
 
     pyr.pointsOutput(points3);
-    pyr2.pointsOutput(points4);
-    QImage matching = drawMatches(image, evilImage, points3, points4, matches);
+//    pyr2.pointsOutput(points4);
+//    QImage matching = drawMatches(image, evilImage, points3, points4, matches);
 
-    matching.save("Matching.png");
+//    matching.save("Matching.png");
 
-//    QImage har(image.toQImage());
-//    drawBlobs(har, points3);
-//    har.save("blobs.png");
+    QImage har(image.toQImage());
+    drawBlobs(har, points3);
+    har.save("blobs.png");
 
 
 ///
