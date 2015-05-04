@@ -26,6 +26,7 @@ CVImage::CVImage(const CVImage &anotherImage)
 
 CVImage::CVImage(CVImage &&other)
 {
+
     height = other.height;
     width = other.width;
     data = move(other.data);

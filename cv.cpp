@@ -431,6 +431,9 @@ CVImage  getSimpleDescriptors(const CVImage &source, vector<FeaturePoint> points
 //        }
 //        cout<<endl;
         ///NORMALIZE HERE
+
+
+
     }
 
     return detectors;
@@ -478,6 +481,7 @@ vector<Dmatch> matchDescriptors(const CVImage &descriptors1, const CVImage &desc
         //cout<<minDistance<<endl;
 
         //INSERT RATIO CHECK
+        //if(minDistance  < 20)
         answer.emplace_back(Dmatch(i, minNumber, minDistance));
         if(secondMinNumer!=-1){
             double ratioDistance = minDistance / secondMinDistance;

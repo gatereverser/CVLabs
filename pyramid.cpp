@@ -166,7 +166,7 @@ vector<FeaturePoint> Pyramid::getBlobFeaturePoints(){
             CVSobelSeparateY(Iy, Iyy);
 
 
-            vector<FeaturePoint> harpoints = harris(images[i * levelsCount + j] ,3, 2000);
+//            vector<FeaturePoint> harpoints = harris(images[i * levelsCount + j] ,3, 1);
 
             for(int u = borderY; u < n - borderY;u++){
                 for(int v = borderX; v < m - borderX;v++){
@@ -203,7 +203,6 @@ vector<FeaturePoint> Pyramid::getBlobFeaturePoints(){
 //                        }
 //                        if(!truth) continue;
 
-
                         double dxx = Ixx.getPixel(u, v),
                              dxy = Ixy.getPixel(u, v),
                              dyy = Iyy.getPixel(u, v),
@@ -224,7 +223,7 @@ vector<FeaturePoint> Pyramid::getBlobFeaturePoints(){
 
         }
     }
-    // cout<<points.size()<< "OLOLO"<<endl;
+     cout<<points.size()<< "OLOLO"<<endl;
 
     return points;
 }
@@ -274,7 +273,7 @@ CVImage  Pyramid::getSimpleDescriptors( vector<FeaturePoint> points, int binCoun
         angles.emplace_back(angle);
     }
 
-    for(int k = 0; k < points.size();k++){
+    for(int k = 0; k < points.size() - 1;k++){
 
         int n = images[points[k].getLevel()].getHeight();
         int m = images[points[k].getLevel()].getWidth();
@@ -315,6 +314,8 @@ CVImage  Pyramid::getSimpleDescriptors( vector<FeaturePoint> points, int binCoun
                 double gausWeight = exp(-(x * x + y * y) / degreeDenominator) / denominator / magicConst;
                 //cout<<gausWeight<<endl;
 
+
+                //INTERPOLATION (ACtually not)
                 detectors.setPixel(k,  row + column + divedBinNum % binCount,
                                    detectors.getPixel(k,  row + column + divedBinNum % binCount) + magnitude * gausWeight * binFactor);
                 detectors.setPixel(k,  row + column + (divedBinNum + 1) % binCount,
@@ -337,8 +338,25 @@ CVImage  Pyramid::getSimpleDescriptors( vector<FeaturePoint> points, int binCoun
 //        cout<<endl;
 
 
-        ///NORMALIZE HERE
+
     }
+
+    ///NORMALIZE HERE
+    for(int i = 0;i < detectors.getHeight();i++){
+        for(int k = 0;k < 2;k++){
+            double unit = 0 ;
+            for( int j = 0; j < detectors.getWidth(); j++){
+                unit += sqrt(detectors.getPixel(i, j) * detectors.getPixel(i, j));
+            }
+
+            for( int j = 0; j < detectors.getWidth(); j++){
+                detectors.setPixel(i, j, detectors.getPixel(i, j) / unit);
+                if(detectors.getPixel(i, j) > 0.2)  detectors.setPixel(i, j, 0.2);
+            }
+        }
+
+    }
+
 
     return detectors;
 }
