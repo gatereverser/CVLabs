@@ -1,7 +1,7 @@
 #include "mainwindow.h"
 #include <QApplication>
-#include<Qimage>
 #include<QDebug>
+#include"cv.h"
 #include"pyramid.h"
 #include <ctime>
 
@@ -21,11 +21,11 @@ int main(int argc, char *argv[])
 
 
 
-    CVImage image(CVImage::fromFile("14.jpg"));
+    CVImage image(CVImage::fromFile("image.png"));
     image.save("source.png");
 
 
-    CVImage evilImage(CVImage::fromFile("13.jpg"));
+    CVImage evilImage(CVImage::fromFile("15.jpg"));
     evilImage.save("source2.png");
 
     //image.downscale(2);
@@ -35,18 +35,36 @@ int main(int argc, char *argv[])
 //    t.save("gaussed.png");
 
 ///LAB5
-    Pyramid pyr(Pyramid::Build(image,5,6,1));
-    Pyramid DOG(Pyramid::BuildDOG(pyr));
+    Pyramid pyr(Pyramid::Build(image,3,4,1.6));
+    //Pyramid DOG(Pyramid::BuildDOG(pyr));
     //CVSobel(DOG.images[4],DOG.images[1]);
-    DOG.save("sem");
+   // pyr.save("sem");
+    vector<FeaturePoint> points3 = pyr.getBlobFeaturePoints();
 
-    vector<FeaturePoint> points3 = DOG.getBlobFeaturePoints();
 
-    cout<<points3.size();
+    Pyramid pyr2(Pyramid::Build(evilImage,3,4,1.6));
+    //Pyramid DOG(Pyramid::BuildDOG(pyr));
+    //CVSobel(DOG.images[4],DOG.images[1]);
+    //pyr.save("sem");
+    vector<FeaturePoint> points4 = pyr2.getBlobFeaturePoints();
 
-        QImage har(image.toQImage());
-        drawBlobs(har, points3);
-        har.save("blobs.png");
+
+    CVImage descriptors3 (pyr.getSimpleDescriptors(points3));
+    CVImage descriptors4(pyr2.getSimpleDescriptors(points4));
+
+
+
+    vector<Dmatch> matches = matchDescriptors(descriptors3, descriptors4);
+
+    pyr.pointsOutput(points3);
+    pyr2.pointsOutput(points4);
+    QImage matching = drawMatches(image, evilImage, points3, points4, matches);
+
+    matching.save("Matching.png");
+
+//    QImage har(image.toQImage());
+//    drawBlobs(har, points3);
+//    har.save("blobs.png");
 
 
 ///

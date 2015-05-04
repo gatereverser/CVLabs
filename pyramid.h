@@ -1,6 +1,6 @@
 #pragma once
-#include<QImage>
 #include "cv.h"
+#include "featurepoint.h"
 
 using namespace std;
 
@@ -25,6 +25,11 @@ public:
     static Pyramid BuildDOG(Pyramid &pyramid);
 
     vector<FeaturePoint> getBlobFeaturePoints();
+
+    CVImage getSimpleDescriptors(vector<FeaturePoint> points, int binCount = 8, int histCount = 4, int cellCount = 16);
+
+    void pointsOutput(vector<FeaturePoint> &points);
+
 
     double findPixel(int x, int y, float sigma);
 };

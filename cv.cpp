@@ -138,13 +138,17 @@ void GaussSeparate(const CVImage &source, CVImage &dest, double sigma, BorderWra
     int size = 2*k+1;
     unique_ptr<double[]> data = make_unique<double[]> (size);
 
+    //double sum  = 0;
 
     for(int i=0; i<size; i++)
     {
         int x = i - k;
         double value = exp(-(x*x)/(2*sigma*sigma))/(sqrt(2*3.14)*sigma);
-        data[i] = value;        
+        data[i] = value;
+     //   sum+=value;
     }
+
+   // cout<<sum<<" aFAS"<<endl;
 
 
     CVKernel kernel1 (1,size,data.get());
@@ -153,7 +157,7 @@ void GaussSeparate(const CVImage &source, CVImage &dest, double sigma, BorderWra
     CVImage temp(source.getHeight(), source.getWidth());
     Convolute(source, temp, kernel1, type);
     Convolute(temp, dest, kernel2, type);
-    dest.normalize(0,255);
+    //dest.normalize(0,255);
 
 }
 
@@ -289,6 +293,7 @@ vector<FeaturePoint> harris(const CVImage &source, int windowHalfSize, double th
     }
 
     vector<FeaturePoint> harrisPoints  =  findLocalMaximum(nonFilteredPoints, threshold);
+    //cout<<harrisPoints.size()<<endl;
     return harrisPoints;
 
     double maxDistance = n * n + m * m;
@@ -334,10 +339,27 @@ vector<FeaturePoint> nonMaximumSuppression(const vector<FeaturePoint> &nonSuppre
 //LAB4
 CVImage  getSimpleDescriptors(const CVImage &source, vector<FeaturePoint> points, int binCount, int histCount, int cellCount ){
 
-    int n = source.getHeight();
-    int m = source.getWidth();
+
     int size = histCount / 2;
 
+
+
+
+
+
+    CVImage detectors(points.size(), histCount * histCount * binCount);
+    int cellInHistCount = cellCount / histCount;
+
+    double sigma = cellCount / 2; // * size /  3;
+    double denominator = (2 * 3.14 * sigma * sigma);
+    double degreeDenominator = 2 * sigma * sigma;
+    double magicConst = 0.465644;
+
+    //REINFROCE
+    int halfSize = cellCount / 2 ;
+
+    int n = source.getHeight();
+    int m = source.getWidth();
     CVImage Ix(n, m);
     CVImage Iy(n, m);
     CVSobelSeparateX(source, Ix);
@@ -356,19 +378,9 @@ CVImage  getSimpleDescriptors(const CVImage &source, vector<FeaturePoint> points
     }
 
 
-
-    CVImage detectors(points.size(), histCount * histCount * binCount);
-    int cellInHistCount = cellCount / histCount;
-
-    double sigma = cellCount / 2; // * size /  3;
-    double denominator = (2 * 3.14 * sigma * sigma);
-    double degreeDenominator = 2 * sigma * sigma;
-    double magicConst = 0.465644;
-
-    //REINFROCE
-    int halfSize = cellCount / 2;
-
     for(int k = 0; k < points.size();k++){
+
+
         // double SUPERSUM = 0;
         int posX = points[k].getX();
         int posY = points[k].getY();
@@ -401,10 +413,10 @@ CVImage  getSimpleDescriptors(const CVImage &source, vector<FeaturePoint> points
                 double gausWeight = exp(-(x * x + y * y) / degreeDenominator) / denominator / magicConst;
                 //cout<<gausWeight<<endl;
 
-                detectors.setPixel(k,  row + column + divedBinNum % 8,
-                                   detectors.getPixel(k,  row + column + divedBinNum % 8) + magnitude * gausWeight * binFactor);
-                detectors.setPixel(k,  row + column + (divedBinNum + 1) % 8,
-                                   detectors.getPixel(k,  row + column + (divedBinNum + 1) % 8) + magnitude * gausWeight * (1 - binFactor));
+                detectors.setPixel(k,  row + column + divedBinNum % binCount,
+                                   detectors.getPixel(k,  row + column + divedBinNum % binCount) + magnitude * gausWeight * binFactor);
+                detectors.setPixel(k,  row + column + (divedBinNum + 1) % binCount,
+                                   detectors.getPixel(k,  row + column + (divedBinNum + 1) % binCount) + magnitude * gausWeight * (1 - binFactor));
 
                 //cout<< angle<<" "<<magnitude * gausWeight<<" "<< magnitude * gausWeight * binFactor<< " "<<magnitude * gausWeight * (1 - binFactor)<<endl;
 
