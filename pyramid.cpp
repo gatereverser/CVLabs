@@ -186,7 +186,7 @@ vector<FeaturePoint> Pyramid::getBlobFeaturePoints(){
 //                            cout<< dog.images[current].getPixel(u, v) - dog.images[current + dz3d[t]].getPixel(i + dx3d[t], j + dy3d[t])<<endl;
 //                        }
                         if (dog.images[current].getPixel(u, v) >=
-                                dog.images[current + dz3d[t]].getPixel(i + dx3d[t], j + dy3d[t]) || dog.images[current].getPixel(u, v) <=0 ){
+                                dog.images[current + dz3d[t]].getPixel(u + dx3d[t], v + dy3d[t]) || dog.images[current].getPixel(u, v) <=0 ){
                             isMinimum = false;
                         }
                         if (!isMaximum && !isMinimum){
@@ -208,8 +208,15 @@ vector<FeaturePoint> Pyramid::getBlobFeaturePoints(){
                              dyy = Iyy.getPixel(u, v),
                              trace  = dxx + dyy,
                              determinat = dxx * dyy - dxy * dxy;
-                        if (trace * trace / determinat < 12.1)
+                        if (trace * trace / determinat > 12.1)
                             continue;
+
+
+                        auto dx = Ix.getPixel(u, v), dy = Iy.getPixel(u, v),
+                             di = -(  dx * dyy - dy * dxy) / determinat,
+                             dj = -(- dx * dxy + dy * dxx) / determinat;
+                        if (fabs(dog.images[current].getPixel(u, v) - 0.5 * (dx * di + dy * dj)) < 8)
+                        continue;
 
                        // if( realSigma[i * (levelsCount) + j] > 4.8)
                      points.emplace_back(u , v , realSigma[i * (levelsCount) + j], i * (levelsCount) + j);
@@ -236,6 +243,7 @@ CVImage  Pyramid::getSimpleDescriptors( vector<FeaturePoint> points, int binCoun
 
 
     CVImage detectors(points.size(), histCount * histCount * binCount);
+
     int cellInHistCount = cellCount / histCount;
 
     double sigma = cellCount / 2; // * size /  3;
@@ -273,7 +281,9 @@ CVImage  Pyramid::getSimpleDescriptors( vector<FeaturePoint> points, int binCoun
         angles.emplace_back(angle);
     }
 
-    for(int k = 0; k < points.size() - 1;k++){
+    if(points.size() == 0) return detectors;
+
+    for(int k = 0; k < (points.size() - 1);k++){
 
         int posX = points[k].getX();
         int posY = points[k].getY();
@@ -285,30 +295,36 @@ CVImage  Pyramid::getSimpleDescriptors( vector<FeaturePoint> points, int binCoun
         int halfSize = cellCount / 2 * currentSigma[points[k].getLevel()];;
 
         //Calcaulating ANgle for a point
-        //int angleHalfSize = cellCount / 2;
-//        const int numOrientation = 36;
-//        double bin[numOrientation];
-//        memset(bin, 0, numOrientation * sizeof(double));
+//        int angleHalfSize = cellCount / 2;
+        const int numOrientation = 36;
+        double angleOrientation[numOrientation];
+        memset(angleOrientation, 0, numOrientation * sizeof(double));
 
-//        for (int i = posX - halfSize; i < posX + halfSize; i++){
-//            for (int j = posY - halfSize; j < posY + halfSize; j++) {
+        for (int i = posX - halfSize; i < posX + halfSize; i++){
+            for (int j = posY - halfSize; j < posY + halfSize; j++) {
 
-//                double angle = angles[points[k].getLevel()].getPixel(i,j);
-//                double magnitude = magnitudes[points[k].getLevel()].getPixel(i,j);
+                double x = i - posX;
+                double y = j - posY;
+                double gausWeight = exp(-(x * x + y * y) / degreeDenominator) / denominator;
 
-//                a = a * numOrientation / (2 * M_PI);
-//                int inta = ((int) a);
-//                auto vall = (a - inta) * len,
-//                     valr = len - vall;
-//                bin[inta] += vall;
-//                bin[(inta + 1) % numOrientation] += valr;
-//            }
-//        }
+                double angle = angles[points[k].getLevel()].getPixel(i,j);
+                double magnitude = magnitudes[points[k].getLevel()].getPixel(i,j);
 
-//        int maxIndex = distance(bin, max_element(&bin[0], &bin[numOrientation]));
+                int dang = 360 / binCount;
+                double binNum  = angle / dang;
+                int divedBinNum = (int) binNum;
 
+                double whereToGo = (angle - (divedBinNum * dang +( divedBinNum +1)* dang) / 2);
+                int direction = whereToGo < 0 ? (divedBinNum == 0 ? binCount - 1 : -1) : 1;
 
+                double binFactor =  1 - (fabs(whereToGo)) / dang;
 
+                angleOrientation[divedBinNum] += binFactor * gausWeight;
+                angleOrientation[(divedBinNum + direction) % binCount ]+= (1 - binFactor) * gausWeight;
+            }
+        }
+
+        int maxIndex = distance(angleOrientation, max_element(&angleOrientation[0], &angleOrientation[numOrientation]));
 
 
 

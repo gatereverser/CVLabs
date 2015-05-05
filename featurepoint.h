@@ -16,7 +16,7 @@ public:
     FeaturePoint (int i, int j, double sc, int tlevel) : x(i), y(j), scale(sc), level(tlevel){}
     inline int getX() { return x;}
     inline int getY() { return y;}
-    inline int getScale() { return scale;}
+    inline double getScale() { return scale;}
     inline int getOrientation() { return orientation;}
     inline int getLevel() { return level;}
     inline void setX(int i){

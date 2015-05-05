@@ -530,6 +530,7 @@ void drawBlobs(QImage &image, vector<FeaturePoint> points){
     p.setPen(QPen(Qt::red, 1, Qt::SolidLine, Qt::SquareCap));
 
     for(int i = 0;i < points.size(); i++){
+
         p.drawEllipse(QPointF(points[i].getY(),points[i].getX()), points[i].getScale()* sqrt(2), points[i].getScale()*sqrt(2));
     }
 
