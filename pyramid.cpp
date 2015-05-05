@@ -134,7 +134,7 @@ vector<FeaturePoint> Pyramid::getBlobFeaturePoints(){
 
     Pyramid dog(BuildDOG(*this));
 
-    //dog.save("DFI");
+    //dog.save("sem");
 
 
     //cout<<dog.images[0].getPixel(125,122)<<" ADOLF";
@@ -275,16 +275,45 @@ CVImage  Pyramid::getSimpleDescriptors( vector<FeaturePoint> points, int binCoun
 
     for(int k = 0; k < points.size() - 1;k++){
 
+        int posX = points[k].getX();
+        int posY = points[k].getY();
+
         int n = images[points[k].getLevel()].getHeight();
         int m = images[points[k].getLevel()].getWidth();
-
 
         //REINFROCE
         int halfSize = cellCount / 2 * currentSigma[points[k].getLevel()];;
 
+        //Calcaulating ANgle for a point
+        //int angleHalfSize = cellCount / 2;
+//        const int numOrientation = 36;
+//        double bin[numOrientation];
+//        memset(bin, 0, numOrientation * sizeof(double));
+
+//        for (int i = posX - halfSize; i < posX + halfSize; i++){
+//            for (int j = posY - halfSize; j < posY + halfSize; j++) {
+
+//                double angle = angles[points[k].getLevel()].getPixel(i,j);
+//                double magnitude = magnitudes[points[k].getLevel()].getPixel(i,j);
+
+//                a = a * numOrientation / (2 * M_PI);
+//                int inta = ((int) a);
+//                auto vall = (a - inta) * len,
+//                     valr = len - vall;
+//                bin[inta] += vall;
+//                bin[(inta + 1) % numOrientation] += valr;
+//            }
+//        }
+
+//        int maxIndex = distance(bin, max_element(&bin[0], &bin[numOrientation]));
+
+
+
+
+
+
 //         double SUPERSUM = 0;
-        int posX = points[k].getX();
-        int posY = points[k].getY();
+
         for(int i = posX - halfSize;i < posX + halfSize; i++){
             for(int j = posY - halfSize;j < posY + halfSize; j++){
 
@@ -300,7 +329,10 @@ CVImage  Pyramid::getSimpleDescriptors( vector<FeaturePoint> points, int binCoun
                 double binNum  = angle / dang;
                 int divedBinNum = (int) binNum;
 
-                double binFactor =  1 - (angle - divedBinNum * dang) / dang;
+                double whereToGo = (angle - (divedBinNum * dang +( divedBinNum +1)* dang) / 2);
+                int direction = whereToGo < 0 ? (divedBinNum == 0 ? binCount - 1 : -1) : 1;
+                //cout<<"WHERHE "<< whereToGo<<endl;
+                double binFactor =  1 - (fabs(whereToGo)) / dang;
 
                 //consider in what hist it belongs
                 int binX = (x + halfSize)/ (halfSize / 2);
@@ -318,8 +350,8 @@ CVImage  Pyramid::getSimpleDescriptors( vector<FeaturePoint> points, int binCoun
                 //INTERPOLATION (ACtually not)
                 detectors.setPixel(k,  row + column + divedBinNum % binCount,
                                    detectors.getPixel(k,  row + column + divedBinNum % binCount) + magnitude * gausWeight * binFactor);
-                detectors.setPixel(k,  row + column + (divedBinNum + 1) % binCount,
-                                   detectors.getPixel(k,  row + column + (divedBinNum + 1) % binCount) + magnitude * gausWeight * (1 - binFactor));
+                detectors.setPixel(k,  row + column + (divedBinNum + direction) % binCount,
+                                   detectors.getPixel(k,  row + column + (divedBinNum + direction) % binCount) + magnitude * gausWeight * (1 - binFactor));
 
                 //cout<< angle<<" "<<magnitude * gausWeight<<" "<< magnitude * gausWeight * binFactor<< " "<<magnitude * gausWeight * (1 - binFactor)<<endl;
 

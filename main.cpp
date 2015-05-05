@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
 
 
 
-    CVImage image(CVImage::fromFile("image.png"));
+    CVImage image(CVImage::fromFile("16.jpg"));
     image.save("source.png");
 
 
@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
     Pyramid pyr(Pyramid::Build(image,3,4,1.6));
     //Pyramid DOG(Pyramid::BuildDOG(pyr));
     //CVSobel(DOG.images[4],DOG.images[1]);
-   // pyr.save("sem");
+    //pyr.save("sem");
     vector<FeaturePoint> points3 = pyr.getBlobFeaturePoints();
 
 
