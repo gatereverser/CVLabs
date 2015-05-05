@@ -21,11 +21,11 @@ int main(int argc, char *argv[])
 
 
 
-    CVImage image(CVImage::fromFile("16.jpg"));
+    CVImage image(CVImage::fromFile("image.png"));
     image.save("source.png");
 
 
-    CVImage evilImage(CVImage::fromFile("8.png"));
+    CVImage evilImage(CVImage::fromFile("imagex3.png"));
     evilImage.save("source2.png");
 
     //image.downscale(2);
@@ -35,14 +35,14 @@ int main(int argc, char *argv[])
 //    t.save("gaussed.png");
 
 ///LAB5
-    Pyramid pyr(Pyramid::Build(image,3,4,1.6));
+    Pyramid pyr(Pyramid::Build(image,log2(image.getHeight()) - log2(16) + 1, 4 ,1.6));
     //Pyramid DOG(Pyramid::BuildDOG(pyr));
     //CVSobel(DOG.images[4],DOG.images[1]);
     //pyr.save("sem");
     vector<FeaturePoint> points3 = pyr.getBlobFeaturePoints();
 
 
-    Pyramid pyr2(Pyramid::Build(evilImage,3,4,1.6));
+    Pyramid pyr2(Pyramid::Build(evilImage, log2(evilImage.getHeight()) - log2(16) + 1, 4, 1.6));
     //Pyramid DOG(Pyramid::BuildDOG(pyr));
     //CVSobel(DOG.images[4],DOG.images[1]);
     //pyr.save("sem");

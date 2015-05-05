@@ -186,7 +186,7 @@ vector<FeaturePoint> Pyramid::getBlobFeaturePoints(){
 //                            cout<< dog.images[current].getPixel(u, v) - dog.images[current + dz3d[t]].getPixel(i + dx3d[t], j + dy3d[t])<<endl;
 //                        }
                         if (dog.images[current].getPixel(u, v) >=
-                                dog.images[current + dz3d[t]].getPixel(u + dx3d[t], v + dy3d[t]) || dog.images[current].getPixel(u, v) <=0 ){
+                                dog.images[current + dz3d[t]].getPixel(u + dx3d[t], v + dy3d[t]) ){
                             isMinimum = false;
                         }
                         if (!isMaximum && !isMinimum){
@@ -230,7 +230,7 @@ vector<FeaturePoint> Pyramid::getBlobFeaturePoints(){
 
         }
     }
-     cout<<points.size()<< "OLOLO"<<endl;
+     cout<<points.size()<< " POINTS"<<endl;
 
     return points;
 }
@@ -394,12 +394,14 @@ CVImage  Pyramid::getSimpleDescriptors( vector<FeaturePoint> points, int binCoun
         for(int k = 0;k < 2;k++){
             double unit = 0 ;
             for( int j = 0; j < detectors.getWidth(); j++){
-                unit += sqrt(detectors.getPixel(i, j) * detectors.getPixel(i, j));
+                unit += detectors.getPixel(i, j) * detectors.getPixel(i, j);
             }
+
+            unit = sqrt(unit);
 
             for( int j = 0; j < detectors.getWidth(); j++){
                 detectors.setPixel(i, j, detectors.getPixel(i, j) / unit);
-                if(detectors.getPixel(i, j) > 0.2)  detectors.setPixel(i, j, 0.2);
+                if(detectors.getPixel(i, j) > 0.2 && !k)  detectors.setPixel(i, j, 0.2);
             }
         }
 
