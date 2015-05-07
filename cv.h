@@ -5,7 +5,7 @@
 #include "featurepoint.h"
 #include "dmatch.h"
 
-
+#define PII 3.14159265358979323846
 
 const int dx[] = {-1, -1, -1,  0, 0,  1, 1, 1};
 const int dy[] = {-1,  0,  1, -1, 1, -1, 0, 1};

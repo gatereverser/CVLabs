@@ -273,7 +273,12 @@ CVImage  Pyramid::getSimpleDescriptors( vector<FeaturePoint> points, int binCoun
                 double valueY = Iy.getPixel(i,j);
 
                 magnitude.setPixel(i, j, sqrt(valueX * valueX + valueY * valueY));
-                angle.setPixel(i, j, atan2(valueY,valueX) * 180 /3.14 + 180);
+                if( atan2(valueY,valueX) * 180 /PII + 180 >= 360 || atan2(valueY,valueX) * 180 /PII + 180 < 0){
+                    angle.setPixel(i, j, 359);
+                }
+                else{
+                    angle.setPixel(i, j, atan2(valueY,valueX) * 180 /PII + 180);
+                }
             }
         }
 
@@ -281,9 +286,9 @@ CVImage  Pyramid::getSimpleDescriptors( vector<FeaturePoint> points, int binCoun
         angles.emplace_back(angle);
     }
 
-    if(points.size() == 0) return detectors;
+    //if(points.size() == 0) return detectors;
 
-    for(int k = 0; k < (points.size() - 1);k++){
+    for(int k = 0; k < (points.size() /* - 1*/);k++){
 
         int posX = points[k].getX();
         int posY = points[k].getY();
@@ -297,6 +302,7 @@ CVImage  Pyramid::getSimpleDescriptors( vector<FeaturePoint> points, int binCoun
         //Calcaulating ANgle for a point
 //        int angleHalfSize = cellCount / 2;
         const int numOrientation = 36;
+        int rang = 360 / numOrientation;
         double angleOrientation[numOrientation];
         memset(angleOrientation, 0, numOrientation * sizeof(double));
 
@@ -307,25 +313,31 @@ CVImage  Pyramid::getSimpleDescriptors( vector<FeaturePoint> points, int binCoun
                 double y = j - posY;
                 double gausWeight = exp(-(x * x + y * y) / degreeDenominator) / denominator;
 
-                double angle = angles[points[k].getLevel()].getPixel(i,j);
+                double angle = angles[points[k].getLevel()].getPixel(i,j);                
                 double magnitude = magnitudes[points[k].getLevel()].getPixel(i,j);
 
-                int dang = 360 / binCount;
-                double binNum  = angle / dang;
+                double binNum  = angle / rang;
                 int divedBinNum = (int) binNum;
 
-                double whereToGo = (angle - (divedBinNum * dang +( divedBinNum +1)* dang) / 2);
-                int direction = whereToGo < 0 ? (divedBinNum == 0 ? binCount - 1 : -1) : 1;
+                double whereToGo = (angle - (divedBinNum * rang +( divedBinNum +1)* rang) / 2);
+                int direction = whereToGo < 0 ? (divedBinNum == 0 ? numOrientation - 1 : -1) : 1;
 
-                double binFactor =  1 - (fabs(whereToGo)) / dang;
+                double binFactor =  1 - (fabs(whereToGo)) / rang;
 
                 angleOrientation[divedBinNum] += binFactor * gausWeight;
-                angleOrientation[(divedBinNum + direction) % binCount ]+= (1 - binFactor) * gausWeight;
+                angleOrientation[(divedBinNum + direction) % numOrientation ]+= (1 - binFactor) * gausWeight;
             }
         }
 
-        int maxIndex = distance(angleOrientation, max_element(&angleOrientation[0], &angleOrientation[numOrientation]));
+//        for(int i = 0;i < 36;i++){
+//            cout<<angleOrientation[i]<<endl;
+//        }
 
+        //(max_element(bin, bin + numOrientation) - bin)
+        int maxIndex =  max_element(angleOrientation, angleOrientation + numOrientation) - angleOrientation;
+
+
+        points[k].setOrientation(maxIndex * rang);
 
 
 //         double SUPERSUM = 0;
@@ -338,7 +350,8 @@ CVImage  Pyramid::getSimpleDescriptors( vector<FeaturePoint> points, int binCoun
                 double x = i - posX;
                 double y = j - posY;
 
-                double angle = angles[points[k].getLevel()].getPixel(i,j);
+                double angle = angles[points[k].getLevel()].getPixel(i,j) - points[k].getOrientation();
+                if(angle < 0) angle += 2*PII;
                 double magnitude = magnitudes[points[k].getLevel()].getPixel(i,j);
 
                 int dang = 360 / binCount;

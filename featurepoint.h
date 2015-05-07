@@ -12,7 +12,7 @@ class FeaturePoint
 public:
     FeaturePoint (int i, int j, double k) : x(i), y(j), weight(k) {}
     FeaturePoint (int i, int j, double k, double sc) : x(i), y(j), weight(k), scale(sc) {}
-    FeaturePoint (int i, int j, double k, double sc, double oriental) : x(i), y(j), weight(k), scale(sc), orientation(oriental){}
+    FeaturePoint (int i, int j, double k, double sc, int tlevel, double oriental) : x(i), y(j), weight(k), scale(sc), level(tlevel), orientation(oriental){}
     FeaturePoint (int i, int j, double sc, int tlevel) : x(i), y(j), scale(sc), level(tlevel){}
     inline int getX() { return x;}
     inline int getY() { return y;}
@@ -25,10 +25,16 @@ public:
     inline void setY(int i){
         y = i;
     }
+
+    inline void setOrientation(int i){
+        orientation = i;
+    }
+
     inline void setWeight(double i){
         weight = i;
     }
     inline int getWei() { return weight;}
+
     inline double getDistance( FeaturePoint other){
         return pow(x - other.getX(), 2) + pow(y - other.getY(), 2);
     }

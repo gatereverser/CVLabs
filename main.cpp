@@ -21,11 +21,11 @@ int main(int argc, char *argv[])
 
 
 
-    CVImage image(CVImage::fromFile("image.png"));
+    CVImage image(CVImage::fromFile("16.jpg"));
     image.save("source.png");
 
 
-    CVImage evilImage(CVImage::fromFile("imagex3.png"));
+    CVImage evilImage(CVImage::fromFile("15.jpg"));
     evilImage.save("source2.png");
 
     //image.downscale(2);
@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
     vector<FeaturePoint> points4 = pyr2.getBlobFeaturePoints();
 
 
-    CVImage descriptors3(pyr.getSimpleDescriptors(points3));
+    CVImage descriptors3(pyr.getSimpleDescriptors(points3));    
     CVImage descriptors4(pyr2.getSimpleDescriptors(points4));
 
 

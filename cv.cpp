@@ -583,14 +583,16 @@ QImage drawMatches(const CVImage &first, CVImage &second, vector<FeaturePoint> p
 
         for(int i = 0;i < matches.size(); i++){
 //cout<<matches[i].distance<<endl;
-            p.setPen(QColor(abs(rand()) % 256, abs(rand()) % 256, abs(rand()) % 256));
-            p.drawLine(points1[matches[i].firstMatch].getY(), points1[matches[i].firstMatch].getX(), points2[matches[i].secondMatch].getY(), points2[matches[i].secondMatch].getX());
+            if(points1[matches[i].firstMatch].getScale() < 5 * points2[matches[i].secondMatch].getScale() &&
+                points1[matches[i].firstMatch].getScale() > 0.2 * points2[matches[i].secondMatch].getScale()){
+                p.setPen(QColor(abs(rand()) % 256, abs(rand()) % 256, abs(rand()) % 256));
+                p.drawLine(points1[matches[i].firstMatch].getY(), points1[matches[i].firstMatch].getX(), points2[matches[i].secondMatch].getY(), points2[matches[i].secondMatch].getX());
 
-            auto& p1 = points1[matches[i].firstMatch];
-            p.drawEllipse(QPointF(p1.getY(),p1.getX()), p1.getScale()* sqrt(2), p1.getScale()*sqrt(2));
-            auto& p2 = points2[matches[i].secondMatch];
-            p.drawEllipse(QPointF(p2.getY(),p2.getX()), p2.getScale()* sqrt(2), p2.getScale()*sqrt(2));
-
+                auto& p1 = points1[matches[i].firstMatch];
+                p.drawEllipse(QPointF(p1.getY(),p1.getX()), p1.getScale()* sqrt(2), p1.getScale()*sqrt(2));
+                auto& p2 = points2[matches[i].secondMatch];
+                p.drawEllipse(QPointF(p2.getY(),p2.getX()), p2.getScale()* sqrt(2), p2.getScale()*sqrt(2));
+            }
 
         }
 
