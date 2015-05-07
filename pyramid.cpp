@@ -303,6 +303,7 @@ CVImage  Pyramid::getSimpleDescriptors( vector<FeaturePoint> points, int binCoun
 //        int angleHalfSize = cellCount / 2;
         const int numOrientation = 36;
         int rang = 360 / numOrientation;
+        int dang = 360 / binCount;
         double angleOrientation[numOrientation];
         memset(angleOrientation, 0, numOrientation * sizeof(double));
 
@@ -351,10 +352,10 @@ CVImage  Pyramid::getSimpleDescriptors( vector<FeaturePoint> points, int binCoun
                 double y = j - posY;
 
                 double angle = angles[points[k].getLevel()].getPixel(i,j) - points[k].getOrientation();
-                if(angle < 0) angle += 2*PII;
+                if(angle < 0) angle += 360;
                 double magnitude = magnitudes[points[k].getLevel()].getPixel(i,j);
 
-                int dang = 360 / binCount;
+
                 double binNum  = angle / dang;
                 int divedBinNum = (int) binNum;
 
