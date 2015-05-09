@@ -4,8 +4,15 @@
 #include "cvkernel.h"
 #include "featurepoint.h"
 #include "dmatch.h"
+#include <random>
+#include"gsl/gsl_blas.h"
+#include "gsl/gsl_linalg.h"
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_matrix_double.h>
 
 #define PII 3.14159265358979323846
+
+using namespace std;
 
 const int dx[] = {-1, -1, -1,  0, 0,  1, 1, 1};
 const int dy[] = {-1,  0,  1, -1, 1, -1, 0, 1};
@@ -31,6 +38,9 @@ vector<FeaturePoint> nonMaximumSuppression(const vector<FeaturePoint> &nonSuppre
 
 CVImage getSimpleDescriptors(const CVImage &source, vector<FeaturePoint> points, int binCount = 8, int histCount = 4, int cellCount = 16);
 vector<Dmatch> matchDescriptors(const CVImage &descriptors1, const CVImage &descriptors2);
+
+//BRAND NEW LAB
+void homography(const CVImage &from, const CVImage &to, vector<FeaturePoint> points1, vector<FeaturePoint> points2, vector<Dmatch> matches, double param[9], int iterationCount = 10000, double threshold = 4);
 
 
 void drawPoints(QImage &image, const vector<FeaturePoint> points);

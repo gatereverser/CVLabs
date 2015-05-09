@@ -1,5 +1,6 @@
 #include"pyramid.h"
 
+
 Pyramid::Pyramid(int octaves, int levels)
 {
     octaveCount = octaves;
@@ -159,8 +160,10 @@ vector<FeaturePoint> Pyramid::getBlobFeaturePoints(){
             CVImage Iyy(n, m);
             CVImage Ixy(n, m);
 
-            CVSobelSeparateX(images[i * levelsCount + j], Ix);
-            CVSobelSeparateY(images[i * levelsCount + j], Iy);
+
+            //OR  CVSobelSeparateX(images[i * levelsCount + j], Ix);
+            CVSobelSeparateX(dog.images[current], Ix);
+            CVSobelSeparateY(dog.images[current], Iy);
             CVSobelSeparateY(Ix, Ixy);
             CVSobelSeparateX(Ix, Ixx);
             CVSobelSeparateY(Iy, Iyy);
@@ -171,7 +174,9 @@ vector<FeaturePoint> Pyramid::getBlobFeaturePoints(){
             for(int u = borderY; u < n - borderY;u++){
                 for(int v = borderX; v < m - borderX;v++){
 
-
+                       if(fabs(dog.images[current].getPixel(u, v)) < 0.01){// CONTRAST IF EVERYWHERE
+                           continue;
+                       }
 
                     bool isMaximum = true;
                     bool isMinimum = true;
@@ -208,10 +213,11 @@ vector<FeaturePoint> Pyramid::getBlobFeaturePoints(){
                              dyy = Iyy.getPixel(u, v),
                              trace  = dxx + dyy,
                              determinat = dxx * dyy - dxy * dxy;
-                        if (trace * trace / determinat > 12.1)
+
+                        double edginess = trace * trace / determinat;
+                        if (edginess > 12.1)
                             continue;
-
-
+   // if(edginess< -200) cout<< u<<" "<<v<<" "<<currentOctave[i * (levelsCount) + j]<<endl;
                         auto dx = Ix.getPixel(u, v), dy = Iy.getPixel(u, v),
                              di = -(  dx * dyy - dy * dxy) / determinat,
                              dj = -(- dx * dxy + dy * dxx) / determinat;
@@ -246,10 +252,8 @@ CVImage  Pyramid::getSimpleDescriptors( vector<FeaturePoint> points, int binCoun
 
     int cellInHistCount = cellCount / histCount;
 
-    double sigma = cellCount / 2; // * size /  3;
-    double denominator = (2 * 3.14 * sigma * sigma);
-    double degreeDenominator = 2 * sigma * sigma;
-    double magicConst = 0.465644;
+
+
 
 
     vector<CVImage> magnitudes;
@@ -290,6 +294,11 @@ CVImage  Pyramid::getSimpleDescriptors( vector<FeaturePoint> points, int binCoun
 
     for(int k = 0; k < (points.size() /* - 1*/);k++){
 
+
+        double sigma = currentSigma[points[k].getLevel()] * cellCount / 2; // * size /  3;
+        double denominator = (2 * 3.14 * sigma * sigma);
+        double degreeDenominator = 2 * sigma * sigma;
+
         int posX = points[k].getX();
         int posY = points[k].getY();
 
@@ -326,7 +335,7 @@ CVImage  Pyramid::getSimpleDescriptors( vector<FeaturePoint> points, int binCoun
                 double binFactor =  1 - (fabs(whereToGo)) / rang;
 
                 angleOrientation[divedBinNum] += binFactor * gausWeight;
-                angleOrientation[(divedBinNum + direction) % numOrientation ]+= (1 - binFactor) * gausWeight;
+                angleOrientation[(divedBinNum + direction) % numOrientation ]+= (1 - binFactor);// * gausWeight;
             }
         }
 
@@ -334,24 +343,36 @@ CVImage  Pyramid::getSimpleDescriptors( vector<FeaturePoint> points, int binCoun
 //            cout<<angleOrientation[i]<<endl;
 //        }
 
+
         //(max_element(bin, bin + numOrientation) - bin)
         int maxIndex =  max_element(angleOrientation, angleOrientation + numOrientation) - angleOrientation;
 
-
+//cout<<"GOTCHA "<<maxIndex * rang<<endl;
         points[k].setOrientation(maxIndex * rang);
 
 
 //         double SUPERSUM = 0;
+//        cout<<"HO LOL "<< points[k].getOrientation() << endl;
+//        cout<< cos(points[k].getOrientation() * PII /180)<< " "<< sin(points[k].getOrientation() * PII /180)<<endl;
 
-        for(int i = posX - halfSize;i < posX + halfSize; i++){
-            for(int j = posY - halfSize;j < posY + halfSize; j++){
+        double sqrt2 = sqrt(2);
+        for(int i = posX - halfSize * sqrt2;i < posX + halfSize * sqrt2; i++){
+            for(int j = posY - halfSize * sqrt2;j < posY + halfSize * sqrt2; j++){
 
-
+double angle = angles[points[k].getLevel()].getPixel(i,j) - points[k].getOrientation();
                 //gauss shift
-                double x = i - posX;
-                double y = j - posY;
+                double tempX = i - posX;
+                double tempY = j - posY;
 
-                double angle = angles[points[k].getLevel()].getPixel(i,j) - points[k].getOrientation();
+
+                double x = tempX * cos(angle * PII /180) + tempY * sin(angle * PII /180);
+                 double y =  - tempX * sin(angle * PII /180) + tempY * cos(angle * PII /180);
+
+
+//                 double x = i - posX;
+//                 double y = j - posY;
+
+
                 if(angle < 0) angle += 360;
                 double magnitude = magnitudes[points[k].getLevel()].getPixel(i,j);
 
@@ -365,6 +386,12 @@ CVImage  Pyramid::getSimpleDescriptors( vector<FeaturePoint> points, int binCoun
                 double binFactor =  1 - (fabs(whereToGo)) / dang;
 
                 //consider in what hist it belongs
+
+                if((x + halfSize)/ (halfSize / 2) < 0 || (x + halfSize)/ (halfSize / 2) > (histCount -1) ||
+                   (y + halfSize)/ (halfSize / 2) < 0 || (y + halfSize)/ (halfSize / 2) > (histCount -1) ){
+                    continue;
+                }
+
                 int binX = (x + halfSize)/ (halfSize / 2);
                 int binY = (y + halfSize)/ (halfSize / 2);
 
@@ -373,7 +400,7 @@ CVImage  Pyramid::getSimpleDescriptors( vector<FeaturePoint> points, int binCoun
                 int row = binX * histCount * binCount;
                 int column = binY * binCount;
 
-                double gausWeight = exp(-(x * x + y * y) / degreeDenominator) / denominator / magicConst;
+                double gausWeight = exp(-(x * x + y * y) / degreeDenominator) / denominator;
                 //cout<<gausWeight<<endl;
 
 

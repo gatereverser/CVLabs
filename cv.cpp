@@ -482,10 +482,11 @@ vector<Dmatch> matchDescriptors(const CVImage &descriptors1, const CVImage &desc
 
         //INSERT RATIO CHECK
         //if(minDistance  < 0.003)
-        answer.emplace_back(Dmatch(i, minNumber, minDistance));
+
         if(secondMinNumer!=-1){
             double ratioDistance = minDistance / secondMinDistance;
-            if(ratioDistance < identityFactor){
+            if((ratioDistance < identityFactor)){
+                answer.emplace_back(Dmatch(i, minNumber, minDistance));
               // answer.emplace_back(Dmatch(i, secondMinNumer, secondMinDistance));
             }
         }
@@ -495,6 +496,51 @@ vector<Dmatch> matchDescriptors(const CVImage &descriptors1, const CVImage &desc
 
     return answer;
 }
+
+
+//LAB 8
+void homography(const CVImage &from, const CVImage &to, vector<FeaturePoint> points1, vector<FeaturePoint> points2, vector<Dmatch> matches, double param[9], int iterationCount, double threshold){
+
+    int bestCountInliers = 0;
+
+//    Eigen::MatrixXd A(8, 8);
+//    Eigen::VectorXd B(8), x(8);
+//    Eigen::Matrix3d F, M;
+//    Eigen::VectorXd C(4);
+
+
+    int m[9];
+//gsl_vector* S = gsl_vector_alloc(5);
+gsl_matrix* A;
+        gsl_matrix* V;
+//    gsl_matrix* A = gsl_matrix_alloc(8,9);
+//    gsl_matrix* ATransposed = gsl_matrix_alloc(9,8);
+//    gsl_matrix* AtA = gsl_matrix_alloc(9,9);
+//    gsl_matrix* V = gsl_matrix_alloc(9,9);;
+//    gsl_vector* S = gsl_vector_alloc(9);
+
+gsl_matrix_transpose_memcpy(A,V);
+    while(iterationCount > -1){
+        iterationCount--;
+        if(iterationCount % 100 ==0) cout<<"CAVUM"<<endl;
+
+        random_device rd;
+        mt19937 mt(rd());
+        uniform_int_distribution<int> rnd(0, matches.size() - 1);
+
+
+        int chosenMatches[] = {rnd(mt), rnd(mt), rnd(mt), rnd(mt)};
+
+
+
+
+        //cout<<matches[chosenMatches[0]].firstMatch<<endl;
+
+
+    }
+
+}
+
 
 
 

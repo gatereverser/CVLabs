@@ -29,3 +29,15 @@ HEADERS  += mainwindow.h \
     dmatch.h
 
 FORMS    += mainwindow.ui
+
+
+
+INCLUDEPATH += C:/downloads/GnuWin32/include
+
+DEPENDPATH += C:/downloads/GnuWin32/lib
+
+
+ LIBS += C:/downloads/GnuWin32/lib/libgsl.a
+ LIBS += C:/downloads/GnuWin32/lib/libgslcblas.a
+ LIBS += C:/downloads/GnuWin32/lib/libgsl.dll.a
+ LIBS += C:/downloads/GnuWin32/lib/libgslcblas.dll.a

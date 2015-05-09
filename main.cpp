@@ -21,11 +21,11 @@ int main(int argc, char *argv[])
 
 
 
-    CVImage image(CVImage::fromFile("16.jpg"));
+    CVImage image(CVImage::fromFile("image.png"));
     image.save("source.png");
 
 
-    CVImage evilImage(CVImage::fromFile("15.jpg"));
+    CVImage evilImage(CVImage::fromFile("7.png"));
     evilImage.save("source2.png");
 
     //image.downscale(2);
@@ -34,41 +34,73 @@ int main(int argc, char *argv[])
 //    GaussSeparate(image,t,6, BorderWrappingType::CopyBorder);
 //    t.save("gaussed.png");
 
+
+    ///LAB8
+    Pyramid pyr3(Pyramid::Build(image,log2(image.getHeight()) - log2(16) + 1, 4 ,1.6));
+    //Pyramid DOG(Pyramid::BuildDOG(pyr));
+    //CVSobel(DOG.images[4],DOG.images[1]);
+    //pyr.save("sem");
+    vector<FeaturePoint> points5 = pyr3.getBlobFeaturePoints();
+
+
+    Pyramid pyr4(Pyramid::Build(evilImage, log2(evilImage.getHeight()) - log2(16) + 1, 4, 1.6));
+    //Pyramid DOG(Pyramid::BuildDOG(pyr));
+    //CVSobel(DOG.images[4],DOG.images[1]);
+    //pyr.save("sem");
+    vector<FeaturePoint> points6 = pyr4.getBlobFeaturePoints();
+
+
+    CVImage descriptors5(pyr3.getSimpleDescriptors(points5));
+    CVImage descriptors6(pyr4.getSimpleDescriptors(points6));
+
+
+    vector<Dmatch> matches2 = matchDescriptors(descriptors5, descriptors6);
+
+    pyr3.pointsOutput(points5);
+    pyr4.pointsOutput(points6);
+
+    double homographyMatrix[9];
+
+    homography(image, evilImage, points5, points6,matches2, homographyMatrix);
+
+
+
+    ///
+
 ///LAB5
-    Pyramid pyr(Pyramid::Build(image,log2(image.getHeight()) - log2(16) + 1, 4 ,1.6));
-    //Pyramid DOG(Pyramid::BuildDOG(pyr));
-    //CVSobel(DOG.images[4],DOG.images[1]);
-    //pyr.save("sem");
-    vector<FeaturePoint> points3 = pyr.getBlobFeaturePoints();
+//    Pyramid pyr(Pyramid::Build(image,log2(image.getHeight()) - log2(16) + 1, 4 ,1.6));
+//    //Pyramid DOG(Pyramid::BuildDOG(pyr));
+//    //CVSobel(DOG.images[4],DOG.images[1]);
+//    //pyr.save("sem");
+//    vector<FeaturePoint> points3 = pyr.getBlobFeaturePoints();
 
 
-    Pyramid pyr2(Pyramid::Build(evilImage, log2(evilImage.getHeight()) - log2(16) + 1, 4, 1.6));
-    //Pyramid DOG(Pyramid::BuildDOG(pyr));
-    //CVSobel(DOG.images[4],DOG.images[1]);
-    //pyr.save("sem");
-    vector<FeaturePoint> points4 = pyr2.getBlobFeaturePoints();
+//    Pyramid pyr2(Pyramid::Build(evilImage, log2(evilImage.getHeight()) - log2(16) + 1, 4, 1.6));
+//    //Pyramid DOG(Pyramid::BuildDOG(pyr));
+//    //CVSobel(DOG.images[4],DOG.images[1]);
+//    //pyr.save("sem");
+//    vector<FeaturePoint> points4 = pyr2.getBlobFeaturePoints();
 
 
-    CVImage descriptors3(pyr.getSimpleDescriptors(points3));    
-    CVImage descriptors4(pyr2.getSimpleDescriptors(points4));
+//    CVImage descriptors3(pyr.getSimpleDescriptors(points3));
+//    CVImage descriptors4(pyr2.getSimpleDescriptors(points4));
 
 
 
-    vector<Dmatch> matches = matchDescriptors(descriptors3, descriptors4);
+//    vector<Dmatch> matches = matchDescriptors(descriptors3, descriptors4);
 
-    pyr.pointsOutput(points3);
-    pyr2.pointsOutput(points4);
-    QImage matching = drawMatches(image, evilImage, points3, points4, matches);
+//    pyr.pointsOutput(points3);
+//    pyr2.pointsOutput(points4);
+//    QImage matching = drawMatches(image, evilImage, points3, points4, matches);
 
-    matching.save("Matching.png");
+//    matching.save("Matching.png");
 
-    QImage har(image.toQImage());
-    drawBlobs(har, points3);
-    har.save("blobs.png");
+//    QImage har(image.toQImage());
+//    drawBlobs(har, points3);
+//    har.save("blobs.png");
 
 
 ///
-
 
 //    ///LAB4
 
