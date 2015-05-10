@@ -47,5 +47,5 @@ void homography(const CVImage &from, const CVImage &to, vector<FeaturePoint> poi
 void drawPoints(QImage &image, const vector<FeaturePoint> points);
 void drawBlobs(QImage &image, vector<FeaturePoint> points);
 QImage drawMatches(const CVImage &first, CVImage &second, vector<FeaturePoint> points1, vector<FeaturePoint> points2, vector<Dmatch> matches);
-QImage drawMatches(const CVImage &first, CVImage &second, vector<FeaturePoint> points1, vector<FeaturePoint> points2, vector<Dmatch> matches, int t[4]);
+QImage drawMatches(const CVImage &first,const CVImage &second, vector<FeaturePoint> points1, vector<FeaturePoint> points2, vector<Dmatch> matches, int t[4]);
 QImage makePanorama(CVImage &first, CVImage &secondimage,double  homographyMatrix[9]);

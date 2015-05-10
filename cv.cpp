@@ -502,7 +502,7 @@ vector<Dmatch> matchDescriptors(const CVImage &descriptors1, const CVImage &desc
 }
 
 
-QImage drawMatches(const CVImage &first, CVImage &second, vector<FeaturePoint> points1, vector<FeaturePoint> points2, vector<Dmatch> matches, int t[4]){
+QImage drawMatches(const CVImage &first, const CVImage &second, vector<FeaturePoint> points1, vector<FeaturePoint> points2, vector<Dmatch> matches, int t[4]){
     int maxHeight = max(first.getHeight(), second. getHeight());
 
      QImage final = QImage(first.getWidth() + second.getWidth(), maxHeight, QImage::Format_RGB32);
@@ -544,7 +544,7 @@ QImage drawMatches(const CVImage &first, CVImage &second, vector<FeaturePoint> p
       // p.setPen(QPen(Qt::green, 1, Qt::SolidLine, Qt::SquareCap));
 
         for(int i = 0;i < 4; i++){
-//cout<<matches[i].distance<<endl;
+cout<<matches[i].distance<< "ADOLF"<< endl;
             if(points1[matches[t[i]].firstMatch].getScale() < 5 * points2[matches[t[i]].secondMatch].getScale() &&
                 points1[matches[t[i]].firstMatch].getScale() > 0.2 * points2[matches[t[i]].secondMatch].getScale()){
                 p.setPen(QColor(abs(rand()) % 256, abs(rand()) % 256, abs(rand()) % 256));
@@ -751,7 +751,7 @@ void homography(const CVImage &from, const CVImage &to, vector<FeaturePoint> poi
            //Which does he conenct
             for(int i = 0;i < 4; i++){
             bestbestmat[i] = chosenMatches[i];
-
+cout<<"I HATE YOU"<< bestbestmat[i]<<endl;
             }
         }
 
@@ -761,7 +761,7 @@ void homography(const CVImage &from, const CVImage &to, vector<FeaturePoint> poi
         cout<<param[i]<<endl;
     }
 
-    drawMatches(from, to, points1, points2, matches, bestbestmat);
+   // drawMatches(from, to, points1, points2, matches, bestbestmat);
 
     cout<<"TESTING TIME!"<<endl;
     for(int i = 0;i < matches.size();i++){
