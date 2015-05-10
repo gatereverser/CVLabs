@@ -491,7 +491,7 @@ vector<Dmatch> matchDescriptors(const CVImage &descriptors1, const CVImage &desc
                     points1[i].getScale() > 0.2 * points2[minNumber].getScale()){
                 answer.emplace_back(i, minNumber, minDistance);
                 }
-              // answer.emplace_back(Dmatch(i, secondMinNumer, secondMinDistance));
+              // answer._back(Dmatch(i, secondMinNumer, secondMinDistance));
             }
         }
 
@@ -600,6 +600,28 @@ void homography(const CVImage &from, const CVImage &to, vector<FeaturePoint> poi
         int chosenMatches[] = {rnd(mt), rnd(mt), rnd(mt), rnd(mt)};
 
 
+        while(1){
+            int i = 0;
+            if((chosenMatches[i] == chosenMatches[i+1]) || (chosenMatches[i] == chosenMatches[i+1])||
+                (chosenMatches[i] == chosenMatches[i+2]) || (chosenMatches[i] == chosenMatches[i+3])||
+                (chosenMatches[i + 1] == chosenMatches[i+2]) || (chosenMatches[i + 1] == chosenMatches[i+3])||
+                    (chosenMatches[i + 2] == chosenMatches[i+3])){
+                for( i = 0; i < 4;i++){
+                    chosenMatches[i]= rnd(mt);
+                }
+            }
+            else{
+                break;
+            }
+        }
+        for(int i = 0; i < 3;i++){
+          if(chosenMatches[i] == chosenMatches[i+1]){
+              chosenMatches[i + 1] =  rnd(mt);
+              i = 0;
+          }
+        }
+
+    //FILL TE MATRIX NOW!!!!
 
         for(int i = 0;i < 4; i++){
 //cout<< chosenMatches[i] <<"sfsd"<<endl;
@@ -664,6 +686,8 @@ void homography(const CVImage &from, const CVImage &to, vector<FeaturePoint> poi
             gsl_matrix_set(A ,2 * i + 1, 8, -yd);
 
         }
+
+        //MATRIX FILLLED
 
         gsl_matrix_transpose_memcpy(ATransposed, A);
         gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1, ATransposed, A, 0 , AtA);
@@ -751,7 +775,7 @@ void homography(const CVImage &from, const CVImage &to, vector<FeaturePoint> poi
            //Which does he conenct
             for(int i = 0;i < 4; i++){
             bestbestmat[i] = chosenMatches[i];
-cout<<"I HATE YOU"<< bestbestmat[i]<<endl;
+            cout<<"I HATE YOU"<< bestbestmat[i]<<endl;
             }
         }
 
@@ -761,7 +785,9 @@ cout<<"I HATE YOU"<< bestbestmat[i]<<endl;
         cout<<param[i]<<endl;
     }
 
-   // drawMatches(from, to, points1, points2, matches, bestbestmat);
+   //drawMatches(from, to, points1, points2, matches, bestbestmat);
+
+
 
     cout<<"TESTING TIME!"<<endl;
     for(int i = 0;i < matches.size();i++){
@@ -775,11 +801,17 @@ cout<<"I HATE YOU"<< bestbestmat[i]<<endl;
         int xCalculate = (param[0] * xFrom + param[1] * yFrom + param[2]) / (param[6] * xFrom  + param[7] * yFrom + param[8]);
         int yCalculate = (param[3] * xFrom + param[4] * yFrom + param[5]) / (param[6] * xFrom  + param[7] * yFrom + param[8]);
 
+
+        points2[matches[i].secondMatch].setX(xCalculate);
+        points2[matches[i].secondMatch].setY(yCalculate);
         double distance  = (xCalculate - xTo) * (xCalculate - xTo) + (yCalculate - yTo) * (yCalculate - yTo);
        // cout<< distance<< "DISTANCE MAN" <<endl;
        // cout<<xFrom<< " "<< yFrom<< " "<< xCalculate<<" "<< yCalculate<<endl;
 
     }
+
+    //drawMatches(from, to, points1, points2, matches);
+
 
 }
 
@@ -826,7 +858,6 @@ void drawBlobs(QImage &image, vector<FeaturePoint> points){
 
 
 }
-
 
 
 QImage drawMatches(const CVImage &first, CVImage &second, vector<FeaturePoint> points1, vector<FeaturePoint> points2, vector<Dmatch> matches){
@@ -887,6 +918,72 @@ QImage drawMatches(const CVImage &first, CVImage &second, vector<FeaturePoint> p
 
          p.end(); // Don't forget this line!
 
+         final.save("EMERGENCY.png");
+
+     return final;
+}
+
+
+QImage drawMatches(const CVImage &first, const CVImage &second, vector<FeaturePoint> points1, vector<FeaturePoint> points2, vector<Dmatch> matches){
+    int maxHeight = max(first.getHeight(), second. getHeight());
+
+     QImage final = QImage(first.getWidth() + second.getWidth(), maxHeight, QImage::Format_RGB32);
+
+
+     //Making doubleImage
+     for(int i=0; i<first.getHeight(); i++)
+     {
+         for(int j=0; j<first.getWidth(); j++)
+         {
+             int color = first.getPixel(i, j);
+             final.setPixel(j, i, qRgb(color,color,color));
+         }
+
+     }
+
+     for(int i=0; i<second.getHeight(); i++)
+     {
+         for(int j=0; j<second.getWidth(); j++)
+         {
+             int color = second.getPixel(i, j);
+             final.setPixel(j + first.getWidth(), i, qRgb(color,color,color));
+         }
+
+     }
+
+
+     //Shifting Points
+     for(int i = 0;i < points2.size(); i++){
+         points2[i].setY(points2[i].getY() + first.getWidth());
+     }
+
+     drawPoints(final, points1);
+     drawPoints(final, points2);
+
+      QPainter p(&final);
+
+        p.setRenderHint(QPainter::Antialiasing);
+      // p.setPen(QPen(Qt::green, 1, Qt::SolidLine, Qt::SquareCap));
+
+        for(int i = 0;i < matches.size(); i++){
+//cout<<matches[i].distance<<endl;
+            if(points1[matches[i].firstMatch].getScale() < 5 * points2[matches[i].secondMatch].getScale() &&
+                points1[matches[i].firstMatch].getScale() > 0.2 * points2[matches[i].secondMatch].getScale()){
+                p.setPen(QColor(abs(rand()) % 256, abs(rand()) % 256, abs(rand()) % 256));
+                p.drawLine(points1[matches[i].firstMatch].getY(), points1[matches[i].firstMatch].getX(), points2[matches[i].secondMatch].getY(), points2[matches[i].secondMatch].getX());
+
+                auto& p1 = points1[matches[i].firstMatch];
+                p.drawEllipse(QPointF(p1.getY(),p1.getX()), p1.getScale()* sqrt(2), p1.getScale()*sqrt(2));
+                auto& p2 = points2[matches[i].secondMatch];
+                p.drawEllipse(QPointF(p2.getY(),p2.getX()), p2.getScale()* sqrt(2), p2.getScale()*sqrt(2));
+            }
+
+        }
+
+         p.end(); // Don't forget this line!
+
+         final.save("EMERGENCY.png");
+
      return final;
 }
 
@@ -919,11 +1016,11 @@ QImage makePanorama(CVImage &first, CVImage &secondimage,double  homographyMatri
 
         int dx = 0, dy = 0;
 
+painter.drawImage(dx, dy, image2);
 
-        painter.drawImage(dx, dy, image1);
 
         painter.setTransform(transform);
-        painter.drawImage(dx, dy, image2);
+painter.drawImage(dx, dy, image1);
 
         painter.end();
 

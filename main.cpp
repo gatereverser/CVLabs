@@ -21,11 +21,11 @@ int main(int argc, char *argv[])
 
 
 
-    CVImage image(CVImage::fromFile("13.jpg"));
+    CVImage image(CVImage::fromFile("17.jpg"));
     image.save("source.png");
 
 
-    CVImage evilImage(CVImage::fromFile("image.png"));
+    CVImage evilImage(CVImage::fromFile("18.jpg"));
     evilImage.save("source2.png");
 
     //image.downscale(2);
@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
 //        }
 //    }
 
-    evilImage.save("WATAFAK.png");
+ //   evilImage.save("WATAFAK.png");
 
     cout<<"INITIAL"<<endl;
     for(int i =0;i < 9;i++){

@@ -41,11 +41,11 @@ CVImage getSimpleDescriptors(const CVImage &source, vector<FeaturePoint> points,
 vector<Dmatch> matchDescriptors(const CVImage &descriptors1, const CVImage &descriptors2, vector<FeaturePoint> points1, vector<FeaturePoint> points2);
 
 //BRAND NEW LAB
-void homography(const CVImage &from, const CVImage &to, vector<FeaturePoint> points1, vector<FeaturePoint> points2, vector<Dmatch> matches, double param[9], int iterationCount = 10000, double threshold = 2);
+void homography(const CVImage &from, const CVImage &to, vector<FeaturePoint> points1, vector<FeaturePoint> points2, vector<Dmatch> matches, double param[9], int iterationCount = 100000, double threshold = 4);
 
 
 void drawPoints(QImage &image, const vector<FeaturePoint> points);
 void drawBlobs(QImage &image, vector<FeaturePoint> points);
-QImage drawMatches(const CVImage &first, CVImage &second, vector<FeaturePoint> points1, vector<FeaturePoint> points2, vector<Dmatch> matches);
+QImage drawMatches(const CVImage &first,CVImage &second, vector<FeaturePoint> points1, vector<FeaturePoint> points2, vector<Dmatch> matches);
 QImage drawMatches(const CVImage &first,const CVImage &second, vector<FeaturePoint> points1, vector<FeaturePoint> points2, vector<Dmatch> matches, int t[4]);
 QImage makePanorama(CVImage &first, CVImage &secondimage,double  homographyMatrix[9]);
