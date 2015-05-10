@@ -1016,11 +1016,11 @@ QImage makePanorama(CVImage &first, CVImage &secondimage,double  homographyMatri
 
         int dx = 0, dy = 0;
 
-painter.drawImage(dx, dy, image2);
 
+        painter.drawImage(dx, dy, image1);
 
         painter.setTransform(transform);
-painter.drawImage(dx, dy, image1);
+        painter.drawImage(dx, dy, image2);
 
         painter.end();
 

@@ -21,11 +21,11 @@ int main(int argc, char *argv[])
 
 
 
-    CVImage image(CVImage::fromFile("17.jpg"));
+    CVImage image(CVImage::fromFile("18.jpg"));
     image.save("source.png");
 
 
-    CVImage evilImage(CVImage::fromFile("18.jpg"));
+    CVImage evilImage(CVImage::fromFile("17.jpg"));
     evilImage.save("source2.png");
 
     //image.downscale(2);
@@ -70,20 +70,29 @@ int main(int argc, char *argv[])
 //        }
 //    }
 
-//    for(int i = 0;i < image.getHeight();i++){
-//        for(int j = 0;j < image.getWidth();j++){
-//           int x =  (homographyMatrix[0] * i + homographyMatrix[1] * j + homographyMatrix[2]) /
-//                   (homographyMatrix[6] * i  + homographyMatrix[7] * j + homographyMatrix[8]);
-//           int y = (homographyMatrix[3] * i+ homographyMatrix[4] * j+ homographyMatrix[5]) /
-//                   (homographyMatrix[6] * i  + homographyMatrix[7] * j + homographyMatrix[8]);
-//           if(x <= evilImage.getHeight() && x >= 0 && y <= evilImage.getWidth() && y >= 0){
-//               cout<<"SHIT MAN"<<endl;
-//            evilImage.setPixel(x,y,image.getPixel(i,j));
-//           }
-//        }
-//    }
 
- //   evilImage.save("WATAFAK.png");
+    CVImage Dawn(evilImage.getHeight() + image.getHeight(),2*(evilImage.getWidth() + image.getWidth()));
+
+        for(int i = 0;i < evilImage.getHeight();i++){
+            for(int j = 0;j < evilImage.getWidth();j++){
+                Dawn.setPixel(i,j + image.getWidth(),evilImage.getPixel(i,j));
+            }
+        }
+cout<<"ASFAS"<<endl;
+    for(int i = 0;i < image.getHeight();i++){
+        for(int j = 0;j < image.getWidth();j++){
+           int x =  (homographyMatrix[0] * i + homographyMatrix[1] * j + homographyMatrix[2]) /
+                   (homographyMatrix[6] * i  + homographyMatrix[7] * j + homographyMatrix[8]);
+           int y = (homographyMatrix[3] * i+ homographyMatrix[4] * j+ homographyMatrix[5]) /
+                   (homographyMatrix[6] * i  + homographyMatrix[7] * j + homographyMatrix[8]);
+           if(x < Dawn.getHeight() && x >=  0 && y < evilImage.getWidth() + 2*image.getWidth() && y >=  - image.getWidth()){
+
+            Dawn.setPixel(x,y + image.getWidth() ,image.getPixel(i,j));
+           }
+        }
+    }
+
+    Dawn.save("WATAISWRONG.png");
 
     cout<<"INITIAL"<<endl;
     for(int i =0;i < 9;i++){
