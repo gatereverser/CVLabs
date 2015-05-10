@@ -9,6 +9,7 @@
 #include "gsl/gsl_linalg.h"
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_matrix_double.h>
+#include<ctime>
 
 #define PII 3.14159265358979323846
 
@@ -37,12 +38,14 @@ vector<FeaturePoint> nonMaximumSuppression(const vector<FeaturePoint> &nonSuppre
 
 
 CVImage getSimpleDescriptors(const CVImage &source, vector<FeaturePoint> points, int binCount = 8, int histCount = 4, int cellCount = 16);
-vector<Dmatch> matchDescriptors(const CVImage &descriptors1, const CVImage &descriptors2);
+vector<Dmatch> matchDescriptors(const CVImage &descriptors1, const CVImage &descriptors2, vector<FeaturePoint> points1, vector<FeaturePoint> points2);
 
 //BRAND NEW LAB
-void homography(const CVImage &from, const CVImage &to, vector<FeaturePoint> points1, vector<FeaturePoint> points2, vector<Dmatch> matches, double param[9], int iterationCount = 10000, double threshold = 4);
+void homography(const CVImage &from, const CVImage &to, vector<FeaturePoint> points1, vector<FeaturePoint> points2, vector<Dmatch> matches, double param[9], int iterationCount = 10000, double threshold = 2);
 
 
 void drawPoints(QImage &image, const vector<FeaturePoint> points);
 void drawBlobs(QImage &image, vector<FeaturePoint> points);
 QImage drawMatches(const CVImage &first, CVImage &second, vector<FeaturePoint> points1, vector<FeaturePoint> points2, vector<Dmatch> matches);
+QImage drawMatches(const CVImage &first, CVImage &second, vector<FeaturePoint> points1, vector<FeaturePoint> points2, vector<Dmatch> matches, int t[4]);
+QImage makePanorama(CVImage &first, CVImage &secondimage,double  homographyMatrix[9]);

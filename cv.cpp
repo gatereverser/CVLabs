@@ -444,7 +444,7 @@ CVImage  getSimpleDescriptors(const CVImage &source, vector<FeaturePoint> points
 
 
 
-vector<Dmatch> matchDescriptors(const CVImage &descriptors1, const CVImage &descriptors2){
+vector<Dmatch> matchDescriptors(const CVImage &descriptors1, const CVImage &descriptors2, vector<FeaturePoint> points1, vector<FeaturePoint> points2){
 
     vector<Dmatch> answer;
     if( descriptors1.getWidth() != descriptors2.getWidth()){
@@ -486,7 +486,11 @@ vector<Dmatch> matchDescriptors(const CVImage &descriptors1, const CVImage &desc
         if(secondMinNumer!=-1){
             double ratioDistance = minDistance / secondMinDistance;
             if((ratioDistance < identityFactor)){
-                answer.emplace_back(Dmatch(i, minNumber, minDistance));
+
+                if(points1[i].getScale() < 5 * points2[minNumber].getScale() &&
+                    points1[i].getScale() > 0.2 * points2[minNumber].getScale()){
+                answer.emplace_back(i, minNumber, minDistance);
+                }
               // answer.emplace_back(Dmatch(i, secondMinNumer, secondMinDistance));
             }
         }
@@ -495,6 +499,67 @@ vector<Dmatch> matchDescriptors(const CVImage &descriptors1, const CVImage &desc
 
 
     return answer;
+}
+
+
+QImage drawMatches(const CVImage &first, CVImage &second, vector<FeaturePoint> points1, vector<FeaturePoint> points2, vector<Dmatch> matches, int t[4]){
+    int maxHeight = max(first.getHeight(), second. getHeight());
+
+     QImage final = QImage(first.getWidth() + second.getWidth(), maxHeight, QImage::Format_RGB32);
+
+
+     //Making doubleImage
+     for(int i=0; i<first.getHeight(); i++)
+     {
+         for(int j=0; j<first.getWidth(); j++)
+         {
+             int color = first.getPixel(i, j);
+             final.setPixel(j, i, qRgb(color,color,color));
+         }
+
+     }
+
+     for(int i=0; i<second.getHeight(); i++)
+     {
+         for(int j=0; j<second.getWidth(); j++)
+         {
+             int color = second.getPixel(i, j);
+             final.setPixel(j + first.getWidth(), i, qRgb(color,color,color));
+         }
+
+     }
+
+
+     //Shifting Points
+     for(int i = 0;i < points2.size(); i++){
+         points2[i].setY(points2[i].getY() + first.getWidth());
+     }
+
+     drawPoints(final, points1);
+     drawPoints(final, points2);
+
+      QPainter p(&final);
+
+        p.setRenderHint(QPainter::Antialiasing);
+      // p.setPen(QPen(Qt::green, 1, Qt::SolidLine, Qt::SquareCap));
+
+        for(int i = 0;i < 4; i++){
+//cout<<matches[i].distance<<endl;
+            if(points1[matches[t[i]].firstMatch].getScale() < 5 * points2[matches[t[i]].secondMatch].getScale() &&
+                points1[matches[t[i]].firstMatch].getScale() > 0.2 * points2[matches[t[i]].secondMatch].getScale()){
+                p.setPen(QColor(abs(rand()) % 256, abs(rand()) % 256, abs(rand()) % 256));
+                p.drawLine(points1[matches[t[i]].firstMatch].getY(), points1[matches[t[i]].firstMatch].getX(), points2[matches[t[i]].secondMatch].getY(), points2[matches[t[i]].secondMatch].getX());
+
+                auto& p1 = points1[matches[t[i]].firstMatch];
+                p.drawEllipse(QPointF(p1.getY(),p1.getX()), p1.getScale()* sqrt(2), p1.getScale()*sqrt(2));
+                auto& p2 = points2[matches[t[i]].secondMatch];
+                p.drawEllipse(QPointF(p2.getY(),p2.getX()), p2.getScale()* sqrt(2), p2.getScale()*sqrt(2));
+            }
+
+        }
+
+         p.end(); // Don't forget this line!
+         final.save("WATAFAFafgweK.png");
 }
 
 
@@ -509,23 +574,26 @@ void homography(const CVImage &from, const CVImage &to, vector<FeaturePoint> poi
 //    Eigen::VectorXd C(4);
 
 
-    int m[9];
-//gsl_vector* S = gsl_vector_alloc(5);
-gsl_matrix* A;
-        gsl_matrix* V;
-//    gsl_matrix* A = gsl_matrix_alloc(8,9);
-//    gsl_matrix* ATransposed = gsl_matrix_alloc(9,8);
-//    gsl_matrix* AtA = gsl_matrix_alloc(9,9);
-//    gsl_matrix* V = gsl_matrix_alloc(9,9);;
-//    gsl_vector* S = gsl_vector_alloc(9);
+    double m[9];
 
-gsl_matrix_transpose_memcpy(A,V);
+    int bestbestmat[4];
+
+    gsl_matrix* A = gsl_matrix_alloc(8,9);
+    gsl_matrix* ATransposed = gsl_matrix_alloc(9,8);
+    gsl_matrix* AtA = gsl_matrix_alloc(9,9);
+    gsl_matrix* V = gsl_matrix_alloc(9,9);
+    gsl_vector* S = gsl_vector_alloc(9);
+
+
     while(iterationCount > -1){
         iterationCount--;
-        if(iterationCount % 100 ==0) cout<<"CAVUM"<<endl;
+        //if(iterationCount % 100 ==0) cout<<"CAVUM"<<endl;
 
+        static unsigned int seed = 0;
         random_device rd;
-        mt19937 mt(rd());
+        mt19937 mt((++seed) + time(NULL));
+
+
         uniform_int_distribution<int> rnd(0, matches.size() - 1);
 
 
@@ -533,9 +601,183 @@ gsl_matrix_transpose_memcpy(A,V);
 
 
 
+        for(int i = 0;i < 4; i++){
+//cout<< chosenMatches[i] <<"sfsd"<<endl;
+//            cout<<matches.size()<< " " << points1.size()<< " "<< points2.size()<<endl;
+
+            int x = points1[matches[chosenMatches[i]].firstMatch].getX();
+//            cout<<x<<" ";
+            int y = points1[matches[chosenMatches[i]].firstMatch].getY();
+//cout<<y<<" ";
+            int xd = points2[matches[chosenMatches[i]].secondMatch].getX();
+//            cout<<xd<<" ";
+            int yd = points2[matches[chosenMatches[i]].secondMatch].getY();
+//            cout<<yd<<" ";
+
+//            if(i==0){
+//            x = 299;
+//            y = 788;
+//            xd = 178;
+//            yd = 395;
+//            }
+
+//            if(i==1){
+//            x = 340;
+//            y = 1181;
+//            xd = 231;
+//            yd = 762;
+//            }
+
+//            if(i==2){
+//            x = 887;
+//            y = 1213;
+//            xd = 702;
+//            yd = 792;
+//            }
+
+//            if(i==3){
+//            x = 908;
+//            y = 526;
+//            xd = 838;
+//            yd = 151;
+//            }
+
+            gsl_matrix_set(A ,2 * i, 0, x);
+            gsl_matrix_set(A ,2 * i, 1, y);
+            gsl_matrix_set(A ,2 * i, 2, 1);
+            gsl_matrix_set(A ,2 * i, 3, 0);
+            gsl_matrix_set(A ,2 * i, 4, 0);
+            gsl_matrix_set(A ,2 * i, 5, 0);
+            gsl_matrix_set(A ,2 * i, 6, -xd * x);
+            gsl_matrix_set(A ,2 * i, 7, -xd * y);
+            gsl_matrix_set(A ,2 * i, 8, -xd);
+
+
+            gsl_matrix_set(A ,2 * i + 1, 0, 0);
+            gsl_matrix_set(A ,2 * i + 1, 1, 0);
+            gsl_matrix_set(A ,2 * i + 1, 2, 0);
+            gsl_matrix_set(A ,2 * i + 1, 3, x);
+            gsl_matrix_set(A ,2 * i + 1, 4, y);
+            gsl_matrix_set(A ,2 * i + 1, 5, 1);
+            gsl_matrix_set(A ,2 * i + 1, 6, -yd * x);
+            gsl_matrix_set(A ,2 * i + 1, 7, -yd * y);
+            gsl_matrix_set(A ,2 * i + 1, 8, -yd);
+
+        }
+
+        gsl_matrix_transpose_memcpy(ATransposed, A);
+        gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1, ATransposed, A, 0 , AtA);
+
+
+//        for(int i = 0;i < 9 ;i ++){
+//            for(int j = 0;j < 9 ;j++){
+//            cout<<gsl_matrix_get(AtA, i ,j)<< " ";
+//            }
+//            cout<<endl;
+//            //cout<<m[i]<<endl;
+//        }
+
+
+        gsl_linalg_SV_decomp_jacobi(AtA, V, S);
+
+
+//        for(int i = 0;i < 9 ;i ++){
+//            for(int j = 0;j < 9 ;j ++){
+
+//                cout<< gsl_matrix_get(V, i ,j)<<" ";
+//            }
+//            cout<<endl;
+
+//        }
+
+
+        for(int i = 0;i < 9 ;i ++){
+            m[i] = gsl_matrix_get(V, i ,8);
+//            cout<<m[i]<<endl;
+        }
+
+
+//        int x = 50;
+//        int y = 459;
+//        xd = 50;
+//        yd = 729;
+//cout<<m[4] * y<< "DAFQA"<<endl;
+//        int xCalculate = (m[0] * x + m[1] * y + m[2]) / (m[6] * x  + m[7] * y + m[8]);
+//        int yCalcualte = (m[3] * x+ m[4] * y+ m[5]) / (m[6] * x  + m[7] * y + m[8]) ;
+
+
+//        cout<<xCalculate<< " "<<yCalcualte<<endl;
+
+
+
 
         //cout<<matches[chosenMatches[0]].firstMatch<<endl;
 
+        int cntInlier = 0;
+
+        for(int i = 0;i < matches.size();i++){
+
+            int xFrom = points1[matches[i].firstMatch].getX();
+
+            int yFrom = points1[matches[i].firstMatch].getY();
+
+            if(points1[matches[i].firstMatch].getScale() < 5 * points2[matches[i].secondMatch].getScale() &&
+                points1[matches[i].firstMatch].getScale() > 0.2 * points2[matches[i].secondMatch].getScale()){
+                int xTo = points2[matches[i].secondMatch].getX();
+
+                int yTo = points2[matches[i].secondMatch].getY();
+
+                int xCalculate = (m[0] * xFrom + m[1] * yFrom + m[2]) / (m[6] * xFrom  + m[7] * yFrom + m[8]);
+                int yCalculate = (m[3] * xFrom + m[4] * yFrom + m[5]) / (m[6] * xFrom  + m[7] * yFrom + m[8]);
+
+                double distance  = (xCalculate - xTo) * (xCalculate - xTo) + (yCalculate - yTo) * (yCalculate - yTo);
+                if(distance <= threshold){
+                    cntInlier++;
+                }
+            }
+
+        }
+
+
+        //cout<<cntInlier<<"COMMMON"<<endl;
+
+        if(cntInlier > bestCountInliers){
+            bestCountInliers = cntInlier;
+            cout<< bestCountInliers<<" THEY ARE BEST AROUND"<<endl;
+            for(int i = 0;i < 9;i++){
+                param[i] = m[i];
+            }
+
+           //Which does he conenct
+            for(int i = 0;i < 4; i++){
+            bestbestmat[i] = chosenMatches[i];
+
+            }
+        }
+
+
+    }
+    for(int i = 0;i < 9;i++){
+        cout<<param[i]<<endl;
+    }
+
+    drawMatches(from, to, points1, points2, matches, bestbestmat);
+
+    cout<<"TESTING TIME!"<<endl;
+    for(int i = 0;i < matches.size();i++){
+
+        int xFrom = points1[matches[i].firstMatch].getX();
+        int yFrom = points1[matches[i].firstMatch].getY();
+        int xTo = points2[matches[i].secondMatch].getX();
+//            cout<<xd<<" ";
+        int yTo = points2[matches[i].secondMatch].getY();
+
+        int xCalculate = (param[0] * xFrom + param[1] * yFrom + param[2]) / (param[6] * xFrom  + param[7] * yFrom + param[8]);
+        int yCalculate = (param[3] * xFrom + param[4] * yFrom + param[5]) / (param[6] * xFrom  + param[7] * yFrom + param[8]);
+
+        double distance  = (xCalculate - xTo) * (xCalculate - xTo) + (yCalculate - yTo) * (yCalculate - yTo);
+       // cout<< distance<< "DISTANCE MAN" <<endl;
+       // cout<<xFrom<< " "<< yFrom<< " "<< xCalculate<<" "<< yCalculate<<endl;
 
     }
 
@@ -584,6 +826,7 @@ void drawBlobs(QImage &image, vector<FeaturePoint> points){
 
 
 }
+
 
 
 QImage drawMatches(const CVImage &first, CVImage &second, vector<FeaturePoint> points1, vector<FeaturePoint> points2, vector<Dmatch> matches){
@@ -646,3 +889,46 @@ QImage drawMatches(const CVImage &first, CVImage &second, vector<FeaturePoint> p
 
      return final;
 }
+
+
+QImage makePanorama(CVImage &first, CVImage &secondimage,double  homographyMatrix[9]){
+
+        QTransform transform(homographyMatrix[4], homographyMatrix[1], homographyMatrix[7], homographyMatrix[3],
+                homographyMatrix[0], homographyMatrix[6], homographyMatrix[5], homographyMatrix[2],
+                homographyMatrix[8]);
+
+//            QTransform transform(homographyMatrix[0], homographyMatrix[1], homographyMatrix[2], homographyMatrix[3],
+//                    homographyMatrix[4], homographyMatrix[5], homographyMatrix[6], homographyMatrix[7],
+//                    homographyMatrix[8]);
+
+        cout<<"LESGO";
+        for(int i =0;i < 9;i++){
+            cout<<homographyMatrix[i]<<endl;
+        }
+
+
+        int width = 3000, height = 15000;
+        QImage panorama(width, height, QImage::Format_RGB32);
+        QPainter painter(&panorama);
+
+        QImage image1(first.toQImage());
+        QImage image2(secondimage.toQImage());
+
+        image1.save("_TEST1.png");
+        image2.save("_TEST2.png");
+
+        int dx = 0, dy = 0;
+
+
+        painter.drawImage(dx, dy, image1);
+
+        painter.setTransform(transform);
+        painter.drawImage(dx, dy, image2);
+
+        painter.end();
+
+
+        return panorama;
+
+}
+

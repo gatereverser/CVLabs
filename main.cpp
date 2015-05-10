@@ -16,16 +16,16 @@ int main(int argc, char *argv[])
 //    return a.exec();
 
 
+
     clock_t begin = clock();
 
 
 
-
-    CVImage image(CVImage::fromFile("image.png"));
+    CVImage image(CVImage::fromFile("13.jpg"));
     image.save("source.png");
 
 
-    CVImage evilImage(CVImage::fromFile("7.png"));
+    CVImage evilImage(CVImage::fromFile("image.png"));
     evilImage.save("source2.png");
 
     //image.downscale(2);
@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
     CVImage descriptors6(pyr4.getSimpleDescriptors(points6));
 
 
-    vector<Dmatch> matches2 = matchDescriptors(descriptors5, descriptors6);
+    vector<Dmatch> matches2 = matchDescriptors(descriptors5, descriptors6, points5, points6);
 
     pyr3.pointsOutput(points5);
     pyr4.pointsOutput(points6);
@@ -62,6 +62,40 @@ int main(int argc, char *argv[])
     double homographyMatrix[9];
 
     homography(image, evilImage, points5, points6,matches2, homographyMatrix);
+
+
+//    for(int i = 0;i < evilImage.getHeight();i++){
+//        for(int j = 0;j < evilImage.getWidth();j++){
+//            evilImage.setPixel(i,j,0);
+//        }
+//    }
+
+//    for(int i = 0;i < image.getHeight();i++){
+//        for(int j = 0;j < image.getWidth();j++){
+//           int x =  (homographyMatrix[0] * i + homographyMatrix[1] * j + homographyMatrix[2]) /
+//                   (homographyMatrix[6] * i  + homographyMatrix[7] * j + homographyMatrix[8]);
+//           int y = (homographyMatrix[3] * i+ homographyMatrix[4] * j+ homographyMatrix[5]) /
+//                   (homographyMatrix[6] * i  + homographyMatrix[7] * j + homographyMatrix[8]);
+//           if(x <= evilImage.getHeight() && x >= 0 && y <= evilImage.getWidth() && y >= 0){
+//               cout<<"SHIT MAN"<<endl;
+//            evilImage.setPixel(x,y,image.getPixel(i,j));
+//           }
+//        }
+//    }
+
+    evilImage.save("WATAFAK.png");
+
+    cout<<"INITIAL"<<endl;
+    for(int i =0;i < 9;i++){
+        cout<<homographyMatrix[i]<<endl;
+    }
+
+    QImage panorama = makePanorama(image, evilImage, homographyMatrix);
+    panorama.save("Panorama.png");
+
+
+
+
 
 
 
@@ -87,7 +121,7 @@ int main(int argc, char *argv[])
 
 
 
-//    vector<Dmatch> matches = matchDescriptors(descriptors3, descriptors4);
+//    vector<Dmatch> matches = matchDescriptors(descriptors3, descriptors4, points3, points4);
 
 //    pyr.pointsOutput(points3);
 //    pyr2.pointsOutput(points4);

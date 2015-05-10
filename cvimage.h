@@ -2,6 +2,7 @@
 
 #include <QImage>
 #include <QPainter>
+#include <QTransform>
 #include <iostream>
 #include <memory>
 #include <algorithm>
