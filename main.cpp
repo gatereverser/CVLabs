@@ -21,11 +21,11 @@ int main(int argc, char *argv[])
 
 
 
-    CVImage image(CVImage::fromFile("18.jpg"));
+    CVImage image(CVImage::fromFile("image.png"));
     image.save("source.png");
 
 
-    CVImage evilImage(CVImage::fromFile("17.jpg"));
+    CVImage evilImage(CVImage::fromFile("15.jpg"));
     evilImage.save("source2.png");
 
     //image.downscale(2);
@@ -35,72 +35,110 @@ int main(int argc, char *argv[])
 //    t.save("gaussed.png");
 
 
+    ///LAB9
+
+
+        Pyramid pyr3(Pyramid::Build(image,log2(image.getHeight()) - log2(16) + 1, 4 ,1.6));
+        vector<FeaturePoint> points5 = pyr3.getBlobFeaturePoints();
+
+
+        Pyramid pyr4(Pyramid::Build(evilImage, log2(evilImage.getHeight()) - log2(16) + 1, 4, 1.6));
+        vector<FeaturePoint> points6 = pyr4.getBlobFeaturePoints();
+
+
+        CVImage descriptors5(pyr3.getSimpleDescriptors(points5));
+        CVImage descriptors6(pyr4.getSimpleDescriptors(points6));
+
+
+        vector<Dmatch> matches2 = matchDescriptors(descriptors5, descriptors6, points5, points6);
+
+        pyr3.pointsOutput(points5);
+        pyr4.pointsOutput(points6);
+
+        double h[9];
+        hough(descriptors5, descriptors6, points5, points6, matches2, h,
+               -image.getWidth(), evilImage.getWidth(), -image.getHeight(), evilImage.getHeight());
+
+
+        QTransform t(h[4], h[1], h[3], h[0], h[5], h[2]);
+        int width = evilImage.getWidth(), height = evilImage.getHeight();
+        QImage image2(width, height, QImage::Format_RGB32);// = image1;//.transformed(t);
+        QPainter painter(&image2);
+        int dx = 0, dy = 0;
+
+        painter.drawImage(dx, dy, evilImage.toQImage());
+
+        painter.setTransform(t);
+        painter.setPen(Qt::green);
+    //    painter.drawImage(dx, dy, image2);
+        painter.drawRect(0, 0, image.getWidth(), image.getHeight());
+
+        painter.end();
+
+        image2.save("transformed.png");
+
+    ///
+
+
     ///LAB8
-    Pyramid pyr3(Pyramid::Build(image,log2(image.getHeight()) - log2(16) + 1, 4 ,1.6));
-    //Pyramid DOG(Pyramid::BuildDOG(pyr));
-    //CVSobel(DOG.images[4],DOG.images[1]);
-    //pyr.save("sem");
-    vector<FeaturePoint> points5 = pyr3.getBlobFeaturePoints();
+//    Pyramid pyr3(Pyramid::Build(image,log2(image.getHeight()) - log2(16) + 1, 4 ,1.6));
+//    //Pyramid DOG(Pyramid::BuildDOG(pyr));
+//    //CVSobel(DOG.images[4],DOG.images[1]);
+//    //pyr.save("sem");
+//    vector<FeaturePoint> points5 = pyr3.getBlobFeaturePoints();
 
 
-    Pyramid pyr4(Pyramid::Build(evilImage, log2(evilImage.getHeight()) - log2(16) + 1, 4, 1.6));
-    //Pyramid DOG(Pyramid::BuildDOG(pyr));
-    //CVSobel(DOG.images[4],DOG.images[1]);
-    //pyr.save("sem");
-    vector<FeaturePoint> points6 = pyr4.getBlobFeaturePoints();
+//    Pyramid pyr4(Pyramid::Build(evilImage, log2(evilImage.getHeight()) - log2(16) + 1, 4, 1.6));
+//    //Pyramid DOG(Pyramid::BuildDOG(pyr));
+//    //CVSobel(DOG.images[4],DOG.images[1]);
+//    //pyr.save("sem");
+//    vector<FeaturePoint> points6 = pyr4.getBlobFeaturePoints();
 
 
-    CVImage descriptors5(pyr3.getSimpleDescriptors(points5));
-    CVImage descriptors6(pyr4.getSimpleDescriptors(points6));
+//    CVImage descriptors5(pyr3.getSimpleDescriptors(points5));
+//    CVImage descriptors6(pyr4.getSimpleDescriptors(points6));
 
 
-    vector<Dmatch> matches2 = matchDescriptors(descriptors5, descriptors6, points5, points6);
+//    vector<Dmatch> matches2 = matchDescriptors(descriptors5, descriptors6, points5, points6);
 
-    pyr3.pointsOutput(points5);
-    pyr4.pointsOutput(points6);
+//    pyr3.pointsOutput(points5);
+//    pyr4.pointsOutput(points6);
 
-    double homographyMatrix[9];
+//    double homographyMatrix[9];
 
-    homography(image, evilImage, points5, points6,matches2, homographyMatrix);
+//    homography(image, evilImage, points5, points6,matches2, homographyMatrix);
 
 
-//    for(int i = 0;i < evilImage.getHeight();i++){
-//        for(int j = 0;j < evilImage.getWidth();j++){
-//            evilImage.setPixel(i,j,0);
+
+//    CVImage Dawn(evilImage.getHeight() + image.getHeight(),2*(evilImage.getWidth() + image.getWidth()));
+
+//        for(int i = 0;i < evilImage.getHeight();i++){
+//            for(int j = 0;j < evilImage.getWidth();j++){
+//                Dawn.setPixel(i,j + image.getWidth(),evilImage.getPixel(i,j));
+//            }
+//        }
+//cout<<"ASFAS"<<endl;
+//    for(int i = 0;i < image.getHeight();i++){
+//        for(int j = 0;j < image.getWidth();j++){
+//           int x =  (homographyMatrix[0] * i + homographyMatrix[1] * j + homographyMatrix[2]) /
+//                   (homographyMatrix[6] * i  + homographyMatrix[7] * j + homographyMatrix[8]);
+//           int y = (homographyMatrix[3] * i+ homographyMatrix[4] * j+ homographyMatrix[5]) /
+//                   (homographyMatrix[6] * i  + homographyMatrix[7] * j + homographyMatrix[8]);
+//           if(x < Dawn.getHeight() && x >=  0 && y < evilImage.getWidth() + 2*image.getWidth() && y >=  - image.getWidth()){
+
+//            Dawn.setPixel(x,y + image.getWidth() ,image.getPixel(i,j));
+//           }
 //        }
 //    }
 
+//    Dawn.save("WATAISWRONG.png");
 
-    CVImage Dawn(evilImage.getHeight() + image.getHeight(),2*(evilImage.getWidth() + image.getWidth()));
+//    cout<<"INITIAL"<<endl;
+//    for(int i =0;i < 9;i++){
+//        cout<<homographyMatrix[i]<<endl;
+//    }
 
-        for(int i = 0;i < evilImage.getHeight();i++){
-            for(int j = 0;j < evilImage.getWidth();j++){
-                Dawn.setPixel(i,j + image.getWidth(),evilImage.getPixel(i,j));
-            }
-        }
-cout<<"ASFAS"<<endl;
-    for(int i = 0;i < image.getHeight();i++){
-        for(int j = 0;j < image.getWidth();j++){
-           int x =  (homographyMatrix[0] * i + homographyMatrix[1] * j + homographyMatrix[2]) /
-                   (homographyMatrix[6] * i  + homographyMatrix[7] * j + homographyMatrix[8]);
-           int y = (homographyMatrix[3] * i+ homographyMatrix[4] * j+ homographyMatrix[5]) /
-                   (homographyMatrix[6] * i  + homographyMatrix[7] * j + homographyMatrix[8]);
-           if(x < Dawn.getHeight() && x >=  0 && y < evilImage.getWidth() + 2*image.getWidth() && y >=  - image.getWidth()){
 
-            Dawn.setPixel(x,y + image.getWidth() ,image.getPixel(i,j));
-           }
-        }
-    }
-
-    Dawn.save("WATAISWRONG.png");
-
-    cout<<"INITIAL"<<endl;
-    for(int i =0;i < 9;i++){
-        cout<<homographyMatrix[i]<<endl;
-    }
-
-    QImage panorama = makePanorama(image, evilImage, homographyMatrix);
-    panorama.save("Panorama.png");
 
 
 

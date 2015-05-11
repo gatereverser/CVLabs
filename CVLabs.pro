@@ -18,7 +18,8 @@ SOURCES += main.cpp\
     cvimage.cpp \
     cv.cpp \
     cvkernel.cpp \
-    pyramid.cpp
+    pyramid.cpp \
+    phasespace.cpp
 
 HEADERS  += mainwindow.h \
     cvimage.h \
@@ -26,7 +27,8 @@ HEADERS  += mainwindow.h \
     cvkernel.h \
     pyramid.h \
     featurepoint.h \
-    dmatch.h
+    dmatch.h \
+    phasespace.h
 
 FORMS    += mainwindow.ui
 

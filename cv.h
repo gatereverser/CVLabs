@@ -2,6 +2,7 @@
 
 #include "cvimage.h"
 #include "cvkernel.h"
+#include "phasespace.h"
 #include "featurepoint.h"
 #include "dmatch.h"
 #include <random>
@@ -42,6 +43,10 @@ vector<Dmatch> matchDescriptors(const CVImage &descriptors1, const CVImage &desc
 
 //BRAND NEW LAB
 void homography(const CVImage &from, const CVImage &to, vector<FeaturePoint> points1, vector<FeaturePoint> points2, vector<Dmatch> matches, double param[9], int iterationCount = 100000, double threshold = 4);
+
+void hough(const CVImage &descriptors1, const CVImage &descriptors2, vector<FeaturePoint> points1,
+vector<FeaturePoint> points2, vector<Dmatch> matches, double param[9], int minX, int maxX, int minY, int maxY,
+ double maxScale = 2, double ds = 0.1, double da = 0.2618, double dx = 2, double dy = 2);
 
 
 void drawPoints(QImage &image, const vector<FeaturePoint> points);

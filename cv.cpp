@@ -816,6 +816,59 @@ void homography(const CVImage &from, const CVImage &to, vector<FeaturePoint> poi
 }
 
 
+//LAB9
+
+void hough(const CVImage &descriptors1, const CVImage &descriptors2, vector<FeaturePoint> points1,
+vector<FeaturePoint> points2, vector<Dmatch> matches, double param[9], int minX, int maxX, int minY, int maxY,
+ double maxScale, double ds, double da, double dx , double dy){
+
+    PhaseSpace ps(maxScale, ds, da, minX, maxX, dx, minY, maxY, dy);
+
+
+    for(int i = 0;i < matches.size();i++){
+        if(matches[i].distance<=0.3){
+            int from = matches[i].firstMatch;
+            int to = matches[i].secondMatch;
+            double angle = points2[to].getOrientation() - points1[from].getOrientation();
+            angle  *= PII;
+            angle /= 180;
+            while (angle < 0) angle += 2 * PII;
+            double y = points1[from].getX();
+            double x = points1[from].getY();
+            double cosa = cos(angle), sina = sin(angle);
+            double temp = x * cosa - y * sina;
+            y = x * sina + y * cosa;
+            x = temp;
+            double m = points2[to].getScale() / points1[from].getScale();
+            x *= m; y *= m;
+            double dx = points2[to].getY() - x, dy =  points2[to].getX() - y;
+            ps.add(m, angle, dx, dy, 1);
+        }
+    }
+
+    double s, a, di, dj;
+    ps.getMax(s, a, dj, di);
+
+    qDebug() << "parameters: " << s << a << dj << di;
+
+    auto cosa = cos(a), sina = sin(a);
+    qDebug() << "sina =" << sina;
+    param[0] = s * cosa;
+    param[1] = s * sina;
+    param[2] = di;
+    param[3] = -s * sina;
+    param[4] = s * cosa;
+    param[5] = dj;
+
+
+
+
+
+
+
+}
+
+
 
 
 //COMMON HELPERS
