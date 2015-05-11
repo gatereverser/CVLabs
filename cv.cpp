@@ -818,23 +818,28 @@ void homography(const CVImage &from, const CVImage &to, vector<FeaturePoint> poi
 
 //LAB9
 
-void hough(const CVImage &descriptors1, const CVImage &descriptors2, vector<FeaturePoint> points1,
-vector<FeaturePoint> points2, vector<Dmatch> matches, double param[9], int minX, int maxX, int minY, int maxY,
- double maxScale, double ds, double da, double dx , double dy){
-
-    PhaseSpace ps(maxScale, ds, da, minX, maxX, dx, minY, maxY, dy);
 
 
+
+
+void hough(vector<FeaturePoint> points1, vector<FeaturePoint> points2, vector<Dmatch> matches,
+           double param[9], double shiftScale, double shiftAngle, double shiftX , double shiftY){
+
+       map<PhaseSpace, vector< int>> ps;
     for(int i = 0;i < matches.size();i++){
-        if(matches[i].distance<=0.3){
+
             int from = matches[i].firstMatch;
             int to = matches[i].secondMatch;
+            double y = points1[from].getX();
+            double x = points1[from].getY();
+
             double angle = points2[to].getOrientation() - points1[from].getOrientation();
             angle  *= PII;
             angle /= 180;
-            while (angle < 0) angle += 2 * PII;
-            double y = points1[from].getX();
-            double x = points1[from].getY();
+
+            if (angle < 0)
+                angle += 2 * PII;
+
             double cosa = cos(angle), sina = sin(angle);
             double temp = x * cosa - y * sina;
             y = x * sina + y * cosa;
@@ -842,25 +847,161 @@ vector<FeaturePoint> points2, vector<Dmatch> matches, double param[9], int minX,
             double m = points2[to].getScale() / points1[from].getScale();
             x *= m; y *= m;
             double dx = points2[to].getY() - x, dy =  points2[to].getX() - y;
-            ps.add(m, angle, dx, dy, 1);
-        }
+
+//cout<<"STUPID "<<points2[to].getScale() << " "<< points1[from].getScale()<<endl ;
+
+            double radius = 4;
+            int is = floor(m / shiftScale);
+            int ia = floor(angle / shiftAngle);
+            int ix = floor(dx / shiftX);
+            int iy = floor(dy / shiftY);
+            for (int ds = -radius; ds <= radius; ds++){
+                for (int da = -radius; da <= radius; da++){
+                    for (int dx = -radius; dx <= radius; dx++){
+                        for (int dy = -radius; dy <= radius; ++dy) {
+                            PhaseSpace param(is + ds, ia + da, ix + dx, iy + dy);
+
+                            if (!ps.count(param))
+                                ps[param] = vector< int>();
+                            auto &psp = ps[param];
+                            int dp = i;
+                            if (find(begin(psp), end(psp), dp) == psp.end())
+                                psp.push_back(dp);
+                        }
+                    }
+                }
+            }
     }
 
-    double s, a, di, dj;
-    ps.getMax(s, a, dj, di);
+    int bestCountInliers = 0;
 
-    qDebug() << "parameters: " << s << a << dj << di;
+    double m[9];
 
-    auto cosa = cos(a), sina = sin(a);
-    qDebug() << "sina =" << sina;
-    param[0] = s * cosa;
-    param[1] = s * sina;
-    param[2] = di;
-    param[3] = -s * sina;
-    param[4] = s * cosa;
-    param[5] = dj;
+    int bestbestmat[4];
+
+    gsl_matrix* A = gsl_matrix_alloc(8,9);
+    gsl_matrix* ATransposed = gsl_matrix_alloc(9,8);
+    gsl_matrix* AtA = gsl_matrix_alloc(9,9);
+    gsl_matrix* V = gsl_matrix_alloc(9,9);
+    gsl_vector* S = gsl_vector_alloc(9);
 
 
+
+
+    for(map<PhaseSpace , vector<int>>::iterator iterator = ps.begin(); iterator != ps.end(); iterator++) {
+
+
+        if(iterator->second.size() >=4 ){
+
+ //cout<<iterator->second.size()<<" DIE"<<endl;
+
+            ///ATTENTION STARTING MODEL MATCHING
+
+            for(int i = 0;i < 4; i++){
+
+
+                int x = points1[matches[iterator->second[i]].firstMatch].getX();
+
+                int y = points1[matches[iterator->second[i]].firstMatch].getY();
+
+                int xd = points2[matches[iterator->second[i]].secondMatch].getX();
+
+                int yd = points2[matches[iterator->second[i]].secondMatch].getY();
+
+
+                gsl_matrix_set(A ,2 * i, 0, x);
+                gsl_matrix_set(A ,2 * i, 1, y);
+                gsl_matrix_set(A ,2 * i, 2, 1);
+                gsl_matrix_set(A ,2 * i, 3, 0);
+                gsl_matrix_set(A ,2 * i, 4, 0);
+                gsl_matrix_set(A ,2 * i, 5, 0);
+                gsl_matrix_set(A ,2 * i, 6, -xd * x);
+                gsl_matrix_set(A ,2 * i, 7, -xd * y);
+                gsl_matrix_set(A ,2 * i, 8, -xd);
+
+
+                gsl_matrix_set(A ,2 * i + 1, 0, 0);
+                gsl_matrix_set(A ,2 * i + 1, 1, 0);
+                gsl_matrix_set(A ,2 * i + 1, 2, 0);
+                gsl_matrix_set(A ,2 * i + 1, 3, x);
+                gsl_matrix_set(A ,2 * i + 1, 4, y);
+                gsl_matrix_set(A ,2 * i + 1, 5, 1);
+                gsl_matrix_set(A ,2 * i + 1, 6, -yd * x);
+                gsl_matrix_set(A ,2 * i + 1, 7, -yd * y);
+                gsl_matrix_set(A ,2 * i + 1, 8, -yd);
+
+            }
+
+            //MATRIX FILLLED
+
+            gsl_matrix_transpose_memcpy(ATransposed, A);
+            gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1, ATransposed, A, 0 , AtA);
+
+
+
+            gsl_linalg_SV_decomp_jacobi(AtA, V, S);
+
+
+
+            for(int i = 0;i < 9 ;i ++){
+                m[i] = gsl_matrix_get(V, i ,8);
+
+            }
+
+
+            int cntInlier = 0;
+
+            for(int i = 0;i < matches.size();i++){
+
+                int xFrom = points1[matches[i].firstMatch].getX();
+
+                int yFrom = points1[matches[i].firstMatch].getY();
+
+                if(points1[matches[i].firstMatch].getScale() < 5 * points2[matches[i].secondMatch].getScale() &&
+                    points1[matches[i].firstMatch].getScale() > 0.2 * points2[matches[i].secondMatch].getScale()){
+                    int xTo = points2[matches[i].secondMatch].getX();
+
+                    int yTo = points2[matches[i].secondMatch].getY();
+
+                    int xCalculate = (m[0] * xFrom + m[1] * yFrom + m[2]) / (m[6] * xFrom  + m[7] * yFrom + m[8]);
+                    int yCalculate = (m[3] * xFrom + m[4] * yFrom + m[5]) / (m[6] * xFrom  + m[7] * yFrom + m[8]);
+
+                    double distance  = (xCalculate - xTo) * (xCalculate - xTo) + (yCalculate - yTo) * (yCalculate - yTo);
+                    if(distance <= 4){
+                        cntInlier++;
+                    }
+                }
+
+            }
+
+
+            //cout<<cntInlier<<"COMMMON"<<endl;
+
+            if(cntInlier > bestCountInliers){
+                bestCountInliers = cntInlier;
+                cout<< bestCountInliers<<" THEY ARE BEST AROUND"<<endl;
+                for(int i = 0;i < 9;i++){
+                    param[i] = m[i];
+                }
+
+               //Which does he conenct
+                for(int i = 0;i < 4; i++){
+                bestbestmat[i] = iterator->second[i];
+                cout<<"I HATE YOU"<< bestbestmat[i]<<endl;
+                }
+            }
+
+
+
+            /// ATTENTION ENDS HERE
+
+
+        }
+
+        // iterator->first = key
+        // iterator->second = value
+
+    }
 
 
 

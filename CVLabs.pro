@@ -18,8 +18,7 @@ SOURCES += main.cpp\
     cvimage.cpp \
     cv.cpp \
     cvkernel.cpp \
-    pyramid.cpp \
-    phasespace.cpp
+    pyramid.cpp
 
 HEADERS  += mainwindow.h \
     cvimage.h \

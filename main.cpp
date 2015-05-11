@@ -55,27 +55,35 @@ int main(int argc, char *argv[])
         pyr3.pointsOutput(points5);
         pyr4.pointsOutput(points6);
 
-        double h[9];
-        hough(descriptors5, descriptors6, points5, points6, matches2, h,
-               -image.getWidth(), evilImage.getWidth(), -image.getHeight(), evilImage.getHeight());
+        double homographyMatrix[9];
+        hough( points5, points6, matches2, homographyMatrix);
 
 
-        QTransform t(h[4], h[1], h[3], h[0], h[5], h[2]);
-        int width = evilImage.getWidth(), height = evilImage.getHeight();
-        QImage image2(width, height, QImage::Format_RGB32);// = image1;//.transformed(t);
-        QPainter painter(&image2);
-        int dx = 0, dy = 0;
+//NOPT WORKING
+            for(int i = 0;i < image.getHeight();i++){
+                for(int j = 0;j < image.getWidth();j++){
+                   int x =  (homographyMatrix[0] * i + homographyMatrix[1] * j + homographyMatrix[2]) /
+                           (homographyMatrix[6] * i  + homographyMatrix[7] * j + homographyMatrix[8]);
+                   int y = (homographyMatrix[3] * i+ homographyMatrix[4] * j+ homographyMatrix[5]) /
+                           (homographyMatrix[6] * i  + homographyMatrix[7] * j + homographyMatrix[8]);
 
-        painter.drawImage(dx, dy, evilImage.toQImage());
+                   if( i == 125 && j ==54) cout<< x<< " WORK YOU LITTLE SH "<<y<<endl;
 
-        painter.setTransform(t);
-        painter.setPen(Qt::green);
-    //    painter.drawImage(dx, dy, image2);
-        painter.drawRect(0, 0, image.getWidth(), image.getHeight());
+                   if(x < evilImage.getHeight() && x >=  0 && y < evilImage.getWidth()&& y >=  0){
+                    evilImage.setPixel(x,y ,255);
+                   }
+                }
+            }
 
-        painter.end();
+                cout<<"INITIAL"<<endl;
+                for(int i =0;i < 9;i++){
+                    cout<<homographyMatrix[i]<<endl;
+                }
 
-        image2.save("transformed.png");
+
+            evilImage.save("HOUGH.png");
+            //WHYYYYY
+
 
     ///
 
