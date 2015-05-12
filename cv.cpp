@@ -225,7 +225,7 @@ vector<FeaturePoint> moravec(const CVImage &source, int windowHalfSize, double t
     // return moravecPoints;
 
     double maxDistance = n * n + m * m;
-    return nonMaximumSuppression(moravecPoints, maxDistance);
+    return nonMaximumSuppression(moravecPoints, maxDistance, 100);
 }
 
 
@@ -294,7 +294,7 @@ vector<FeaturePoint> harris(const CVImage &source, int windowHalfSize, double th
 
     vector<FeaturePoint> harrisPoints  =  findLocalMaximum(nonFilteredPoints, threshold);
     //cout<<harrisPoints.size()<<endl;
-    return harrisPoints;
+   // return harrisPoints;
 
     double maxDistance = n * n + m * m;
     return nonMaximumSuppression(harrisPoints, maxDistance, 100);
@@ -850,7 +850,7 @@ void hough(vector<FeaturePoint> points1, vector<FeaturePoint> points2, vector<Dm
 
 //cout<<"STUPID "<<points2[to].getScale() << " "<< points1[from].getScale()<<endl ;
 
-            double radius = 4;
+            double radius = 3;
             int is = floor(m / shiftScale);
             int ia = floor(angle / shiftAngle);
             int ix = floor(dx / shiftX);
@@ -879,25 +879,25 @@ void hough(vector<FeaturePoint> points1, vector<FeaturePoint> points2, vector<Dm
 
     int bestbestmat[4];
 
-    gsl_matrix* A = gsl_matrix_alloc(8,9);
-    gsl_matrix* ATransposed = gsl_matrix_alloc(9,8);
-    gsl_matrix* AtA = gsl_matrix_alloc(9,9);
-    gsl_matrix* V = gsl_matrix_alloc(9,9);
-    gsl_vector* S = gsl_vector_alloc(9);
-
-
+    gsl_matrix* A = gsl_matrix_alloc(6,6);
+//    gsl_matrix* ATransposed = gsl_matrix_alloc(9,8);
+//    gsl_matrix* AtA = gsl_matrix_alloc(9,9);
+//    gsl_matrix* V = gsl_matrix_alloc(9,9);
+    gsl_permutation* p = gsl_permutation_alloc(6);
+gsl_vector* b = gsl_vector_alloc(6);
+gsl_vector* V = gsl_vector_alloc(6);
 
 
     for(map<PhaseSpace , vector<int>>::iterator iterator = ps.begin(); iterator != ps.end(); iterator++) {
 
 
-        if(iterator->second.size() >=4 ){
+        if(iterator->second.size() >=3 ){
 
  //cout<<iterator->second.size()<<" DIE"<<endl;
 
             ///ATTENTION STARTING MODEL MATCHING
 
-            for(int i = 0;i < 4; i++){
+            for(int i = 0;i < 3; i++){
 
 
                 int x = points1[matches[iterator->second[i]].firstMatch].getX();
@@ -915,9 +915,8 @@ void hough(vector<FeaturePoint> points1, vector<FeaturePoint> points2, vector<Dm
                 gsl_matrix_set(A ,2 * i, 3, 0);
                 gsl_matrix_set(A ,2 * i, 4, 0);
                 gsl_matrix_set(A ,2 * i, 5, 0);
-                gsl_matrix_set(A ,2 * i, 6, -xd * x);
-                gsl_matrix_set(A ,2 * i, 7, -xd * y);
-                gsl_matrix_set(A ,2 * i, 8, -xd);
+                gsl_vector_set(b,2*i,xd);
+                gsl_vector_set(b,2*i+1,yd);
 
 
                 gsl_matrix_set(A ,2 * i + 1, 0, 0);
@@ -926,26 +925,22 @@ void hough(vector<FeaturePoint> points1, vector<FeaturePoint> points2, vector<Dm
                 gsl_matrix_set(A ,2 * i + 1, 3, x);
                 gsl_matrix_set(A ,2 * i + 1, 4, y);
                 gsl_matrix_set(A ,2 * i + 1, 5, 1);
-                gsl_matrix_set(A ,2 * i + 1, 6, -yd * x);
-                gsl_matrix_set(A ,2 * i + 1, 7, -yd * y);
-                gsl_matrix_set(A ,2 * i + 1, 8, -yd);
+
 
             }
 
             //MATRIX FILLLED
 
-            gsl_matrix_transpose_memcpy(ATransposed, A);
-            gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1, ATransposed, A, 0 , AtA);
+            int s;
+
+            gsl_linalg_LU_decomp (A, p, &s);
+
+            gsl_linalg_LU_solve(A,p,b,V);
 
 
-
-            gsl_linalg_SV_decomp_jacobi(AtA, V, S);
-
-
-
-            for(int i = 0;i < 9 ;i ++){
-                m[i] = gsl_matrix_get(V, i ,8);
-
+            
+            for(int i = 0;i < 6 ;i ++){
+                m[i] = gsl_vector_get(V,i);
             }
 
 
@@ -963,8 +958,8 @@ void hough(vector<FeaturePoint> points1, vector<FeaturePoint> points2, vector<Dm
 
                     int yTo = points2[matches[i].secondMatch].getY();
 
-                    int xCalculate = (m[0] * xFrom + m[1] * yFrom + m[2]) / (m[6] * xFrom  + m[7] * yFrom + m[8]);
-                    int yCalculate = (m[3] * xFrom + m[4] * yFrom + m[5]) / (m[6] * xFrom  + m[7] * yFrom + m[8]);
+                    int xCalculate = (m[0] * xFrom + m[1] * yFrom + m[2]) ;
+                    int yCalculate = (m[3] * xFrom + m[4] * yFrom + m[5]);
 
                     double distance  = (xCalculate - xTo) * (xCalculate - xTo) + (yCalculate - yTo) * (yCalculate - yTo);
                     if(distance <= 4){
@@ -980,12 +975,12 @@ void hough(vector<FeaturePoint> points1, vector<FeaturePoint> points2, vector<Dm
             if(cntInlier > bestCountInliers){
                 bestCountInliers = cntInlier;
                 cout<< bestCountInliers<<" THEY ARE BEST AROUND"<<endl;
-                for(int i = 0;i < 9;i++){
+                for(int i = 0;i < 6;i++){
                     param[i] = m[i];
                 }
 
                //Which does he conenct
-                for(int i = 0;i < 4; i++){
+                for(int i = 0;i < 3; i++){
                 bestbestmat[i] = iterator->second[i];
                 cout<<"I HATE YOU"<< bestbestmat[i]<<endl;
                 }

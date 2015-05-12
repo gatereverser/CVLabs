@@ -59,13 +59,14 @@ int main(int argc, char *argv[])
         hough( points5, points6, matches2, homographyMatrix);
 
 
+
+
+
 //NOPT WORKING
             for(int i = 0;i < image.getHeight();i++){
                 for(int j = 0;j < image.getWidth();j++){
-                   int x =  (homographyMatrix[0] * i + homographyMatrix[1] * j + homographyMatrix[2]) /
-                           (homographyMatrix[6] * i  + homographyMatrix[7] * j + homographyMatrix[8]);
-                   int y = (homographyMatrix[3] * i+ homographyMatrix[4] * j+ homographyMatrix[5]) /
-                           (homographyMatrix[6] * i  + homographyMatrix[7] * j + homographyMatrix[8]);
+                   int x =  (homographyMatrix[0] * i + homographyMatrix[1] * j + homographyMatrix[2]);
+                   int y = (homographyMatrix[3] * i+ homographyMatrix[4] * j+ homographyMatrix[5]) ;
 
                    if( i == 125 && j ==54) cout<< x<< " WORK YOU LITTLE SH "<<y<<endl;
 
@@ -85,7 +86,7 @@ int main(int argc, char *argv[])
             //WHYYYYY
 
 
-    ///
+//    ///
 
 
     ///LAB8
@@ -197,25 +198,25 @@ int main(int argc, char *argv[])
 
 //    CVImage f1(image.getHeight(),image.getWidth());
 //    GaussSeparate(image, f1, 0.3);
-//    vector<FeaturePoint> points1 = harris(f1, 3, 10000);// Maybe 0.001?
+//    vector<FeaturePoint> points1 = harris(f1, 3, 2000);// Maybe 0.001?
 //    CVImage descriptors1(getSimpleDescriptors(f1, points1));
 
 
 
 //    CVImage f2(evilImage.getHeight(),evilImage.getWidth());
 //    GaussSeparate(evilImage, f2, 0.3);
-//    vector<FeaturePoint> points2 = harris(f2, 3, 10000);// Maybe 0.001?
+//    vector<FeaturePoint> points2 = harris(f2, 3, 2000);// Maybe 0.001?
 //    CVImage descriptors2(getSimpleDescriptors(f2, points2));
 
 
-//    vector<Dmatch> matches = matchDescriptors(descriptors1, descriptors2);
+//    vector<Dmatch> matches = matchDescriptors(descriptors1, descriptors2, points1, points2);
 
 //    QImage matching = drawMatches(image, evilImage, points1, points2, matches);
 
 //    matching.save("harris.png");
 
 
-//    /// END OF LAB4
+    /// END OF LAB4
 
 
 //    ////LAB 3

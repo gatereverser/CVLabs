@@ -46,7 +46,7 @@ void homography(const CVImage &from, const CVImage &to, vector<FeaturePoint> poi
 
 void hough(vector<FeaturePoint> points1,
 vector<FeaturePoint> points2, vector<Dmatch> matches, double param[9],
- double shiftScale = 0.25, double shiftAngle = PII / 8, double shiftX = 8, double shiftY = 8);
+ double shiftScale = 0.25, double shiftAngle = PII / 8, double shiftX = 4, double shiftY = 4);
 
 
 void drawPoints(QImage &image, const vector<FeaturePoint> points);
